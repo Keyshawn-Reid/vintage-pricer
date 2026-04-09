@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vintage Pricer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 60px auto;
+            background: #f5f5f5;
+        }
+        h1 {
+            font-size: 28px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 30px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏍️ Vintage Pricer</h1>
+    <p>Enter item title to get a price range</p>
+    <form method="POST">
+        <input type="text" name="title" placeholder="e.g. Vintage 90s Harley Davidson 3D Emblem Large" required>
+        <button type="submit">Get Price</button>
+    </form>
+    {% if result %}
+    <div class="result">
+        Estimated Range: {{ result }}
+    </div>
+    {% endif %}
+</body>
+</html>
