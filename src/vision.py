@@ -16,16 +16,25 @@ def extract_features_from_image(image_path):
     with open(image_path, "rb") as f:
         image_data = base64.b64encode(f.read()).decode("utf-8")
 
-    prompt = """Look at this vintage Harley Davidson tee. 
-    Extract the following and return as JSON only, no other text:
+    prompt = """You are an expert vintage Harley Davidson t-shirt appraiser. 
+    Analyze this image carefully and extract the following signals.
+    Return ONLY valid JSON, no other text:
     {
         "era": "80s or 90s or y2k or unknown",
-        "size": "S or M or L or XL or unknown",
+        "size": "S or M or L or XL or 2XL or unknown",
         "has_3d_emblem": true or false,
         "has_single_stitch": true or false,
         "has_location_name": true or false,
         "is_event_tee": true or false
-    }"""
+    }
+
+    Rules:
+    - 3D emblem means the Harley shield logo appears raised/embossed on the graphic
+    - Single stitch means the sleeve hems have single row stitching (vintage indicator)
+    - Location name means a specific city or state appears on the shirt
+    - Event tee means it references a rally, run, or specific event
+    - For era: 80s graphics tend to be bolder/simpler, 90s are more detailed/airbrushed
+    - Look at tags if visible for size and era clues"""
 
     response = client.chat.completions.create(
         model="gpt-4o",
