@@ -5,23 +5,42 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 650px;
             margin: 60px auto;
             background: #f5f5f5;
         }
         h1 { font-size: 28px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #ddd;
+            border: none;
+            font-size: 15px;
+        }
+        .tab.active {
+            background: black;
+            color: white;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
         label {
             display: block;
             margin-top: 16px;
             font-weight: bold;
         }
-        select {
+        select, input[type="file"] {
             width: 100%;
             padding: 10px;
             font-size: 16px;
             margin-top: 6px;
+            box-sizing: border-box;
         }
-        button {
+        button[type="submit"] {
             margin-top: 24px;
             padding: 12px 24px;
             font-size: 16px;
@@ -37,59 +56,109 @@
             font-weight: bold;
             text-align: center;
         }
+        .extracted {
+            margin-top: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .error { color: red; margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>🏍️ Vintage Pricer</h1>
-    <p>Select item details to get a price range</p>
-    <form method="POST">
-        <label>Era</label>
-        <select name="era">
-            <option value="unknown" {% if form_data.get('era') == 'unknown' %}selected{% endif %}>Unknown</option>
-            <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
-            <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
-            <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
-        </select>
 
-        <label>Size</label>
-        <select name="size">
-            <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
-            <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
-            <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
-            <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
-        </select>
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('manual')">Manual</button>
+        <button class="tab" onclick="switchTab('photo')">Photo</button>
+    </div>
 
-        <label>3D Emblem?</label>
-        <select name="emblem">
-            <option value="0" {% if form_data.get('emblem') == '0' %}selected{% endif %}>No</option>
-            <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
-        </select>
+    <!-- Manual Tab -->
+    <div id="manual" class="panel active">
+        <form method="POST">
+            <input type="hidden" name="mode" value="manual">
+            <label>Era</label>
+            <select name="era">
+                <option value="unknown" {% if form_data.get('era') == 'unknown' %}selected{% endif %}>Unknown</option>
+                <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
+                <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
+                <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
+            </select>
+            <label>Size</label>
+            <select name="size">
+                <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
+                <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
+                <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
+                <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
+            </select>
+            <label>3D Emblem?</label>
+            <select name="emblem">
+                <option value="0" {% if form_data.get('emblem') == '0' %}selected{% endif %}>No</option>
+                <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
+            </select>
+            <label>Single Stitch?</label>
+            <select name="single_stitch">
+                <option value="0" {% if form_data.get('single_stitch') == '0' %}selected{% endif %}>No</option>
+                <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
+            </select>
+            <label>Has Location Name?</label>
+            <select name="location">
+                <option value="0" {% if form_data.get('location') == '0' %}selected{% endif %}>No</option>
+                <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
+            </select>
+            <label>Event Tee?</label>
+            <select name="event">
+                <option value="0" {% if form_data.get('event') == '0' %}selected{% endif %}>No</option>
+                <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
+            </select>
+            <button type="submit">Get Price</button>
+        </form>
+    </div>
 
-        <label>Single Stitch?</label>
-        <select name="single_stitch">
-            <option value="0" {% if form_data.get('single_stitch') == '0' %}selected{% endif %}>No</option>
-            <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
-        </select>
+    <!-- Photo Tab -->
+    <div id="photo" class="panel">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="mode" value="photo">
+            <label>Upload photo of tee</label>
+            <input type="file" name="photo" accept="image/*">
+            <button type="submit">Analyze & Price</button>
+        </form>
+        {% if extracted %}
+        <div class="extracted">
+            <strong>Detected:</strong><br>
+            Era: {{ extracted.era }}<br>
+            Size: {{ extracted.size }}<br>
+            3D Emblem: {{ extracted.has_3d_emblem }}<br>
+            Single Stitch: {{ extracted.has_single_stitch }}<br>
+            Location: {{ extracted.has_location_name }}<br>
+            Event Tee: {{ extracted.is_event_tee }}
+        </div>
+        {% endif %}
+    </div>
 
-        <label>Has Location Name?</label>
-        <select name="location">
-            <option value="0" {% if form_data.get('location') == '0' %}selected{% endif %}>No</option>
-            <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
-        </select>
-
-        <label>Event Tee?</label>
-        <select name="event">
-            <option value="0" {% if form_data.get('event') == '0' %}selected{% endif %}>No</option>
-            <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
-        </select>
-
-        <button type="submit">Get Price</button>
-    </form>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
 
     {% if result %}
-    <div class="result">
-        Estimated Range: {{ result }}
-    </div>
+    <div class="result">Estimated Range: {{ result }}</div>
     {% endif %}
+
+    <script>
+        function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+        {% if mode == 'photo' %}
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
+        document.querySelector('.tab:nth-child(1)').classList.remove('active');
+        document.getElementById('photo').classList.add('active');
+        document.getElementById('manual').classList.remove('active');
+        {% endif %}
+    </script>
 </body>
 </html>
