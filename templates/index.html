@@ -1,164 +1,578 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Vintage Pricer</title>
+    <title>RPM — Rogue Pricing Model</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 650px;
-            margin: 60px auto;
-            background: #f5f5f5;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+        :root {
+            --yellow: #FFE600;
+            --yellow-mid: #F5D800;
+            --yellow-dim: rgba(255, 230, 0, 0.14);
+            --yellow-border: rgba(200, 170, 0, 0.3);
+            --bg: #F4F4F1;
+            --surface: #FFFFFF;
+            --surface-2: #F8F8F6;
+            --border: rgba(0,0,0,0.08);
+            --border-strong: rgba(0,0,0,0.13);
+            --text: #111110;
+            --text-muted: #888884;
+            --text-light: #BCBCB8;
+            --radius: 8px;
+            --radius-lg: 14px;
         }
-        h1 { font-size: 28px; }
+ 
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+ 
+        header {
+            padding: 0 2rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+ 
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+ 
+        .logo-globe {
+            width: 30px;
+            height: 30px;
+            background: var(--yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+ 
+        .logo-globe svg {
+            width: 16px;
+            height: 16px;
+            stroke: #111110;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+        }
+ 
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+ 
+        .logo-rpm {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.12em;
+            line-height: 1;
+        }
+ 
+        .logo-sub {
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+ 
+        .version-pill {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.05em;
+        }
+ 
+        main {
+            flex: 1;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+        }
+ 
+        .eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+ 
+        .page-heading {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: var(--text);
+            margin-bottom: 1.75rem;
+            line-height: 1.1;
+        }
+ 
+        .page-heading em {
+            font-style: normal;
+            background: var(--yellow);
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+ 
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+ 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.25rem;
         }
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            background: #ddd;
+ 
+        .tab-btn {
+            padding: 13px 14px;
+            background: none;
             border: none;
-            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.15s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            letter-spacing: 0.01em;
         }
-        .tab.active {
-            background: black;
-            color: white;
+ 
+        .tab-btn.active {
+            color: var(--text);
+            border-bottom-color: var(--yellow-mid);
         }
-        .panel { display: none; }
+ 
+        .tab-btn:hover:not(.active) { color: #555552; }
+ 
+        .panel { display: none; padding: 1.5rem; }
         .panel.active { display: block; }
+ 
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 12px;
+        }
+ 
+        .field { margin-bottom: 0.85rem; }
+ 
         label {
             display: block;
-            margin-top: 16px;
-            font-weight: bold;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
         }
-        select, input[type="file"] {
+ 
+        select {
             width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            margin-top: 6px;
-            box-sizing: border-box;
-        }
-        button[type="submit"] {
-            margin-top: 24px;
-            padding: 12px 24px;
-            font-size: 16px;
-            background: black;
-            color: white;
-            border: none;
+            padding: 9px 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            appearance: none;
+            -webkit-appearance: none;
             cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23BCBCB8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 11px center;
+            padding-right: 30px;
+        }
+ 
+        select:focus {
+            border-color: var(--yellow-mid);
+            box-shadow: 0 0 0 3px var(--yellow-dim);
+            background-color: var(--surface);
+        }
+ 
+        select:hover:not(:focus) {
+            border-color: rgba(0,0,0,0.2);
+        }
+ 
+        .submit-btn {
             width: 100%;
+            margin-top: 1.1rem;
+            padding: 12px;
+            background: var(--yellow);
+            color: #111110;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            transition: background 0.15s, transform 0.1s;
         }
-        .result {
-            margin-top: 30px;
-            font-size: 26px;
-            font-weight: bold;
+ 
+        .submit-btn:hover { background: var(--yellow-mid); }
+        .submit-btn:active { transform: scale(0.99); }
+ 
+        .upload-zone {
+            border: 1.5px dashed var(--border-strong);
+            border-radius: var(--radius);
+            padding: 2.5rem 1.5rem;
             text-align: center;
+            background: var(--surface-2);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
         }
-        .extracted {
-            margin-top: 20px;
-            background: white;
-            padding: 16px;
-            border-radius: 4px;
+ 
+        .upload-zone:hover {
+            border-color: var(--yellow-mid);
+            background: var(--yellow-dim);
+        }
+ 
+        .upload-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--yellow-dim);
+            border: 1px solid var(--yellow-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+ 
+        .upload-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: #888800;
+            fill: none;
+            stroke-width: 1.6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+ 
+        .upload-title {
             font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
         }
-        .error { color: red; margin-top: 20px; }
+ 
+        .upload-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+ 
+        input[type="file"] { display: none; }
+ 
+        .result-box {
+            margin-top: 1.1rem;
+            padding: 1.1rem 1.25rem;
+            background: var(--text);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: rise 0.25s ease;
+        }
+ 
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+ 
+        .result-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+ 
+        .result-price {
+            font-family: 'Space Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--yellow);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+ 
+        .result-chip {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: #111110;
+            background: var(--yellow);
+            padding: 5px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+ 
+        .signals-box {
+            margin-top: 1rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            animation: rise 0.25s ease;
+        }
+ 
+        .signals-header {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+ 
+        .signals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+ 
+        .signal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+ 
+        .signals-grid .signal-row:nth-last-child(-n+2) { border-bottom: none; }
+ 
+        .signal-key { color: var(--text-muted); }
+        .signal-val { font-weight: 600; color: var(--text); }
+        .signal-val.yes { color: #1A7A40; }
+        .signal-val.no { color: var(--text-light); }
+ 
+        .error-msg {
+            margin-top: 1rem;
+            padding: 11px 14px;
+            background: #FFF0F0;
+            border: 1px solid rgba(200,50,50,0.15);
+            border-radius: var(--radius);
+            font-size: 12px;
+            color: #C0392B;
+        }
+ 
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            color: var(--text-light);
+            border-top: 1px solid var(--border);
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <h1>🏍️ Vintage Pricer</h1>
-
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('manual')">Manual</button>
-        <button class="tab" onclick="switchTab('photo')">Photo</button>
-    </div>
-
-    <!-- Manual Tab -->
-    <div id="manual" class="panel active">
-        <form method="POST">
-            <input type="hidden" name="mode" value="manual">
-            <label>Era</label>
-            <select name="era">
-                <option value="unknown" {% if form_data.get('era') == 'unknown' %}selected{% endif %}>Unknown</option>
-                <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
-                <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
-                <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
-            </select>
-            <label>Size</label>
-            <select name="size">
-                <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
-                <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
-                <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
-                <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
-            </select>
-            <label>3D Emblem?</label>
-            <select name="emblem">
-                <option value="0" {% if form_data.get('emblem') == '0' %}selected{% endif %}>No</option>
-                <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
-            </select>
-            <label>Single Stitch?</label>
-            <select name="single_stitch">
-                <option value="0" {% if form_data.get('single_stitch') == '0' %}selected{% endif %}>No</option>
-                <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
-            </select>
-            <label>Has Location Name?</label>
-            <select name="location">
-                <option value="0" {% if form_data.get('location') == '0' %}selected{% endif %}>No</option>
-                <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
-            </select>
-            <label>Event Tee?</label>
-            <select name="event">
-                <option value="0" {% if form_data.get('event') == '0' %}selected{% endif %}>No</option>
-                <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
-            </select>
-            <button type="submit">Get Price</button>
-        </form>
-    </div>
-
-    <!-- Photo Tab -->
-    <div id="photo" class="panel">
-        <form method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="mode" value="photo">
-            <label>Upload photo of tee</label>
-            <input type="file" name="photo" accept="image/*">
-            <button type="submit">Analyze & Price</button>
-        </form>
-        {% if extracted %}
-        <div class="extracted">
-            <strong>Detected:</strong><br>
-            Era: {{ extracted.era }}<br>
-            Size: {{ extracted.size }}<br>
-            3D Emblem: {{ extracted.has_3d_emblem }}<br>
-            Single Stitch: {{ extracted.has_single_stitch }}<br>
-            Location: {{ extracted.has_location_name }}<br>
-            Event Tee: {{ extracted.is_event_tee }}
+ 
+<header>
+    <div class="logo">
+        <div class="logo-globe">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
         </div>
-        {% endif %}
+        <div class="logo-text">
+            <span class="logo-rpm">RPM</span>
+            <span class="logo-sub">Rogue Pricing Model</span>
+        </div>
     </div>
-
-    {% if error %}
-    <div class="error">{{ error }}</div>
-    {% endif %}
-
-    {% if result %}
-    <div class="result">Estimated Range: {{ result }}</div>
-    {% endif %}
-
-    <script>
-        function switchTab(tab) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    <span class="version-pill">HD · v1.0</span>
+</header>
+ 
+<main>
+    <p class="eyebrow">Internal Tool</p>
+    <h1 class="page-heading">Price <em>estimator</em></h1>
+ 
+    <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('manual', this)">Manual Entry</button>
+            <button class="tab-btn" onclick="switchTab('photo', this)">Photo Analysis</button>
+        </div>
+ 
+        <div id="manual" class="panel active">
+            <form method="POST">
+                <input type="hidden" name="mode" value="manual">
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Era</label>
+                        <select name="era">
+                            <option value="unknown" {% if form_data.get('era') == 'unknown' %}selected{% endif %}>Unknown</option>
+                            <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
+                            <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
+                            <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Size</label>
+                        <select name="size">
+                            <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
+                            <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
+                            <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
+                            <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>3D Emblem</label>
+                        <select name="emblem">
+                            <option value="0" {% if form_data.get('emblem') == '0' %}selected{% endif %}>No</option>
+                            <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Single Stitch</label>
+                        <select name="single_stitch">
+                            <option value="0" {% if form_data.get('single_stitch') == '0' %}selected{% endif %}>No</option>
+                            <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Location Name</label>
+                        <select name="location">
+                            <option value="0" {% if form_data.get('location') == '0' %}selected{% endif %}>No</option>
+                            <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Event Tee</label>
+                        <select name="event">
+                            <option value="0" {% if form_data.get('event') == '0' %}selected{% endif %}>No</option>
+                            <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Get Price Range</button>
+            </form>
+ 
+            {% if result and mode == 'manual' %}
+            <div class="result-box">
+                <div>
+                    <p class="result-label">Estimated Range</p>
+                    <p class="result-price">{{ result }}</p>
+                </div>
+                <span class="result-chip">HD · Tee</span>
+            </div>
+            {% endif %}
+        </div>
+ 
+        <div id="photo" class="panel">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="mode" value="photo">
+                <div class="upload-zone" onclick="document.getElementById('photoInput').click()">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </div>
+                    <p class="upload-title">Upload photo</p>
+                    <p class="upload-hint">Tag, front, or back · auto-analyzes on upload</p>
+                </div>
+                <input type="file" id="photoInput" name="photo" accept="image/*" onchange="this.form.submit()">
+            </form>
+ 
+            {% if extracted %}
+            <div class="signals-box">
+                <p class="signals-header">Detected Signals</p>
+                <div class="signals-grid">
+                    <div class="signal-row">
+                        <span class="signal-key">Era</span>
+                        <span class="signal-val">{{ extracted.era }}</span>
+                    </div>
+                    <div class="signal-row">
+                        <span class="signal-key">Size</span>
+                        <span class="signal-val">{{ extracted.size }}</span>
+                    </div>
+                    <div class="signal-row">
+                        <span class="signal-key">3D Emblem</span>
+                        <span class="signal-val {{ 'yes' if extracted.has_3d_emblem else 'no' }}">{{ 'Yes' if extracted.has_3d_emblem else 'No' }}</span>
+                    </div>
+                    <div class="signal-row">
+                        <span class="signal-key">Single Stitch</span>
+                        <span class="signal-val {{ 'yes' if extracted.has_single_stitch else 'no' }}">{{ 'Yes' if extracted.has_single_stitch else 'No' }}</span>
+                    </div>
+                    <div class="signal-row">
+                        <span class="signal-key">Location</span>
+                        <span class="signal-val {{ 'yes' if extracted.has_location_name else 'no' }}">{{ 'Yes' if extracted.has_location_name else 'No' }}</span>
+                    </div>
+                    <div class="signal-row">
+                        <span class="signal-key">Event Tee</span>
+                        <span class="signal-val {{ 'yes' if extracted.is_event_tee else 'no' }}">{{ 'Yes' if extracted.is_event_tee else 'No' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+ 
+            {% if result and mode == 'photo' %}
+            <div class="result-box">
+                <div>
+                    <p class="result-label">Estimated Range</p>
+                    <p class="result-price">{{ result }}</p>
+                </div>
+                <span class="result-chip">AI · Vision</span>
+            </div>
+            {% endif %}
+ 
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+ 
+<footer>RPM · Rogue Pricing Model · HD v1.0 · Internal Use Only</footer>
+ 
+<script>
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
-        event.target.classList.add('active');
+        btn.classList.add('active');
     }
-
-        {% if mode == 'photo' %}
-        document.querySelector('.tab:nth-child(2)').classList.add('active');
-        document.querySelector('.tab:nth-child(1)').classList.remove('active');
-        document.getElementById('photo').classList.add('active');
-        document.getElementById('manual').classList.remove('active');
-        {% endif %}
-    </script>
+ 
+    {% if mode == 'photo' %}
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+    document.getElementById('photo').classList.add('active');
+    document.getElementById('manual').classList.remove('active');
+    {% endif %}
+</script>
+ 
 </body>
 </html>
