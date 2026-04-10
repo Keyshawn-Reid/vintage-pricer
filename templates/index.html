@@ -9,38 +9,83 @@
             margin: 60px auto;
             background: #f5f5f5;
         }
-        h1 {
-            font-size: 28px;
+        h1 { font-size: 28px; }
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
         }
-        input[type="text"] {
+        select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             font-size: 16px;
-            margin: 10px 0;
-            box-sizing: border-box;
+            margin-top: 6px;
         }
         button {
+            margin-top: 24px;
             padding: 12px 24px;
             font-size: 16px;
             background: black;
             color: white;
             border: none;
             cursor: pointer;
+            width: 100%;
         }
         .result {
             margin-top: 30px;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <h1>🏍️ Vintage Pricer</h1>
-    <p>Enter item title to get a price range</p>
+    <p>Select item details to get a price range</p>
     <form method="POST">
-        <input type="text" name="title" placeholder="e.g. Vintage 90s Harley Davidson 3D Emblem Large" required>
+        <label>Era</label>
+        <select name="era">
+            <option value="unknown" {% if form_data.get('era') == 'unknown' %}selected{% endif %}>Unknown</option>
+            <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
+            <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
+            <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
+        </select>
+
+        <label>Size</label>
+        <select name="size">
+            <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
+            <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
+            <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
+            <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
+        </select>
+
+        <label>3D Emblem?</label>
+        <select name="emblem">
+            <option value="0" {% if form_data.get('emblem') == '0' %}selected{% endif %}>No</option>
+            <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
+        </select>
+
+        <label>Single Stitch?</label>
+        <select name="single_stitch">
+            <option value="0" {% if form_data.get('single_stitch') == '0' %}selected{% endif %}>No</option>
+            <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
+        </select>
+
+        <label>Has Location Name?</label>
+        <select name="location">
+            <option value="0" {% if form_data.get('location') == '0' %}selected{% endif %}>No</option>
+            <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
+        </select>
+
+        <label>Event Tee?</label>
+        <select name="event">
+            <option value="0" {% if form_data.get('event') == '0' %}selected{% endif %}>No</option>
+            <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
+        </select>
+
         <button type="submit">Get Price</button>
     </form>
+
     {% if result %}
     <div class="result">
         Estimated Range: {{ result }}
