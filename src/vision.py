@@ -5,7 +5,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 import sys
-sys.path.append("/Users/keyshawnreid/vintage-pricer")
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from src.model import predict_price_from_features
 
 load_dotenv()
@@ -61,9 +62,6 @@ def extract_features_from_image(image_path):
 
 
 if __name__ == "__main__":
-    import sys
-    sys.path.append("/Users/keyshawnreid/vintage-pricer")
-    from src.model import predict_price_from_features
     
     features = extract_features_from_image("test.jpg")
     print("Extracted features:", features)
