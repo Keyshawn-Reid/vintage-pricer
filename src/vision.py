@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from src.model import predict_price_from_features
+from src.brands import BRANDS
 
 load_dotenv()
 
@@ -26,28 +26,9 @@ def _compress_image(image_path):
         img.save(buf, format="JPEG", quality=JPEG_QUALITY)
         return buf.getvalue()
 
-def extract_features_from_image(image_path):
+def extract_features_from_image(image_path, brand="harley"):
     image_data = base64.b64encode(_compress_image(image_path)).decode("utf-8")
-
-    prompt = """You are an expert vintage Harley Davidson t-shirt appraiser. 
-    Analyze this image carefully and extract the following signals.
-    Return ONLY valid JSON, no other text:
-    {
-        "era": "80s or 90s or y2k or unknown",
-        "size": "S or M or L or XL or 2XL or unknown",
-        "has_3d_emblem": true or false,
-        "has_single_stitch": true or false,
-        "has_location_name": true or false,
-        "is_event_tee": true or false
-    }
-
-    Rules:
-    - 3D emblem means the Harley shield logo appears raised/embossed on the graphic
-    - Single stitch means the sleeve hems have single row stitching (vintage indicator)
-    - Location name means a specific city or state appears on the shirt
-    - Event tee means it references a rally, run, or specific event
-    - For era: 80s graphics tend to be bolder/simpler, 90s are more detailed/airbrushed
-    - Look at tags if visible for size and era clues"""
+    prompt = BRANDS[brand]["vision_prompt"]
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -56,12 +37,7 @@ def extract_features_from_image(image_path):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{image_data}"
-                        }
-                    }
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
                 ]
             }
         ],
@@ -74,9 +50,8 @@ def extract_features_from_image(image_path):
 
 
 if __name__ == "__main__":
-    
-    features = extract_features_from_image("test.jpg")
+    from src.model import predict_price_from_features
+    features = extract_features_from_image("test.jpg", brand="harley")
     print("Extracted features:", features)
-    
     low, high = predict_price_from_features(features)
     print(f"Estimated price range: ${low} - ${high}")

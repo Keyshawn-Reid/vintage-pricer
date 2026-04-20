@@ -38,27 +38,19 @@
         header {
             padding: 0 1.5rem;
             height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            position: sticky; top: 0; z-index: 10;
         }
 
         .logo { display: flex; align-items: center; gap: 10px; }
 
         .logo-globe {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             background: var(--yellow);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .logo-globe svg {
@@ -86,12 +78,12 @@
             background: var(--surface-2);
             border: 1px solid var(--border-strong);
             padding: 4px 10px; border-radius: 20px; letter-spacing: 0.05em;
+            transition: all 0.2s;
         }
 
         main {
             flex: 1;
-            max-width: 480px;
-            width: 100%;
+            max-width: 480px; width: 100%;
             margin: 0 auto;
             padding: 1.75rem 1rem 6rem;
         }
@@ -122,8 +114,56 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
+        /* ── Brand selector ── */
+        .brand-section {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .brand-pills {
+            display: flex; gap: 6px;
+            white-space: nowrap;
+        }
+
+        .brand-btn {
+            padding: 7px 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px; font-weight: 500;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            min-height: 36px;
+        }
+
+        .brand-btn:hover:not(.active) {
+            border-color: rgba(0,0,0,0.2);
+            color: var(--text);
+        }
+
+        .brand-btn.active {
+            background: var(--text);
+            border-color: var(--text);
+            color: var(--yellow);
+            font-weight: 600;
+        }
+
+        .no-model-badge {
+            font-size: 9px;
+            color: var(--text-light);
+            margin-left: 4px;
+        }
+
         /* ── Photo zone ── */
-        .photo-section { padding: 1.25rem; border-bottom: 1px solid var(--border); }
+        .photo-section {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
 
         .upload-zone {
             border: 1.5px dashed var(--border-strong);
@@ -133,11 +173,8 @@
             background: var(--surface-2);
             cursor: pointer;
             transition: border-color 0.15s, background 0.15s;
-            position: relative;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 110px;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .upload-zone:hover, .upload-zone.dragover {
@@ -165,7 +202,6 @@
         .upload-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
         .upload-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
 
-        /* Loading state */
         .upload-loading { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
         .spinner {
@@ -183,23 +219,16 @@
             font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em;
         }
 
-        /* Preview state */
         .upload-preview { display: flex; align-items: center; gap: 12px; text-align: left; }
 
         .preview-thumb {
             width: 56px; height: 56px;
-            border-radius: 6px;
-            object-fit: cover;
-            border: 1px solid var(--border-strong);
-            flex-shrink: 0;
+            border-radius: 6px; object-fit: cover;
+            border: 1px solid var(--border-strong); flex-shrink: 0;
         }
 
         .preview-info { flex: 1; min-width: 0; }
-
-        .preview-status {
-            font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px;
-        }
-
+        .preview-status { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
         .preview-count { font-size: 11px; color: var(--text-muted); }
 
         .preview-change {
@@ -240,6 +269,9 @@
 
         .ai-source-badge.visible { display: inline; }
 
+        .signals-panel { display: none; }
+        .signals-panel.active { display: block; }
+
         .fields-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -256,8 +288,7 @@
         label {
             font-family: 'Space Mono', monospace;
             font-size: 9px; letter-spacing: 0.1em;
-            text-transform: uppercase; color: var(--text-muted);
-            line-height: 1;
+            text-transform: uppercase; color: var(--text-muted); line-height: 1;
         }
 
         .ai-badge {
@@ -270,7 +301,6 @@
 
         .ai-badge.visible { display: inline; }
 
-        /* Tooltip */
         .tooltip-wrap { position: relative; display: inline-flex; }
 
         .tooltip-btn {
@@ -283,27 +313,21 @@
             transition: border-color 0.15s, color 0.15s;
         }
 
-        .tooltip-btn:hover, .tooltip-btn:focus { border-color: var(--text-muted); color: var(--text); outline: none; }
+        .tooltip-btn:hover, .tooltip-btn:focus {
+            border-color: var(--text-muted); color: var(--text); outline: none;
+        }
 
         .tooltip-body {
             position: absolute;
             bottom: calc(100% + 6px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text);
-            color: #fff;
+            left: 50%; transform: translateX(-50%);
+            background: var(--text); color: #fff;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 11px; font-weight: 400;
-            line-height: 1.45;
-            padding: 8px 10px;
-            border-radius: 6px;
-            width: 180px;
-            text-transform: none;
-            letter-spacing: 0;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.15s;
-            z-index: 20;
+            font-size: 11px; font-weight: 400; line-height: 1.45;
+            padding: 8px 10px; border-radius: 6px;
+            width: 180px; text-transform: none; letter-spacing: 0;
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.15s; z-index: 20;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             white-space: normal;
         }
@@ -311,8 +335,7 @@
         .tooltip-body::after {
             content: '';
             position: absolute;
-            top: 100%; left: 50%;
-            transform: translateX(-50%);
+            top: 100%; left: 50%; transform: translateX(-50%);
             border: 5px solid transparent;
             border-top-color: var(--text);
         }
@@ -321,8 +344,7 @@
         .tooltip-btn:focus ~ .tooltip-body { opacity: 1; }
 
         select {
-            width: 100%;
-            padding: 10px 12px;
+            width: 100%; padding: 10px 12px;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 14px; color: var(--text);
             background: var(--surface-2);
@@ -345,11 +367,7 @@
         }
 
         select:hover:not(:focus) { border-color: rgba(0,0,0,0.2); }
-
-        select.ai-filled {
-            border-color: rgba(200,170,0,0.5);
-            background-color: rgba(255,230,0,0.05);
-        }
+        select.ai-filled { border-color: rgba(200,170,0,0.5); background-color: rgba(255,230,0,0.05); }
 
         .submit-btn {
             width: 100%; margin-top: 0.5rem;
@@ -406,10 +424,7 @@
             font-weight: 700; display: inline-block; margin-bottom: 6px;
         }
 
-        .result-confidence {
-            font-size: 10px; color: rgba(255,255,255,0.35);
-            letter-spacing: 0.03em;
-        }
+        .result-confidence { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.03em; }
 
         .error-msg {
             margin: 0 1.25rem 1.25rem;
@@ -430,7 +445,6 @@
             text-transform: uppercase;
         }
 
-        /* ── Mobile ── */
         @media (max-width: 400px) {
             main { padding: 1.25rem 0.75rem 6rem; }
             .page-heading { font-size: 20px; }
@@ -457,14 +471,33 @@
             <span class="logo-sub">Rogue Pricing Model</span>
         </div>
     </div>
-    <span class="version-pill">HD · v1.1</span>
+    <span class="version-pill" id="versionPill">HD · v1.2</span>
 </header>
 
 <main>
-    <p class="eyebrow">Harley Davidson · Internal Tool</p>
+    <p class="eyebrow">Internal Tool</p>
     <h1 class="page-heading">Price <em>estimator</em></h1>
 
     <div class="card">
+
+        <!-- Brand selector -->
+        <div class="brand-section">
+            <div class="brand-pills">
+                {% for brand_id, brand_cfg in brands.items() %}
+                <button
+                    type="button"
+                    class="brand-btn {% if brand_id == selected_brand %}active{% endif %}"
+                    data-brand="{{ brand_id }}"
+                    data-short="{{ brand_cfg.short }}"
+                    onclick="selectBrand('{{ brand_id }}', this)">
+                    {{ brand_cfg.label }}
+                    {% if brand_id not in trained_brands %}
+                    <span class="no-model-badge">·&nbsp;no data</span>
+                    {% endif %}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
 
         <!-- Photo upload -->
         <div class="photo-section">
@@ -474,7 +507,6 @@
                  ondragleave="handleDragLeave(event)"
                  ondrop="handleDrop(event)">
 
-                <!-- Default -->
                 <div class="upload-state" id="stateDefault">
                     <div class="upload-icon">
                         <svg viewBox="0 0 24 24">
@@ -486,17 +518,15 @@
                     <p class="upload-hint">Tag, front, or back — AI fills signals automatically</p>
                 </div>
 
-                <!-- Loading -->
                 <div class="upload-state upload-loading" id="stateLoading" hidden>
                     <div class="spinner"></div>
                     <p class="loading-text">Analyzing photo...</p>
                 </div>
 
-                <!-- Preview -->
                 <div class="upload-state upload-preview" id="statePreview" hidden>
                     <img class="preview-thumb" id="previewThumb" alt="">
                     <div class="preview-info">
-                        <p class="preview-status" id="previewStatus">Photo analyzed</p>
+                        <p class="preview-status">Photo analyzed</p>
                         <p class="preview-count" id="previewCount"></p>
                     </div>
                     <button type="button" class="preview-change" onclick="changePhoto(event)">Change</button>
@@ -514,105 +544,47 @@
 
             <form method="POST" id="priceForm">
                 <input type="hidden" name="mode" value="manual">
-                <div class="fields-grid">
+                <input type="hidden" name="brand" id="brandInput" value="{{ selected_brand }}">
 
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="era">Era</label>
-                            <span class="ai-badge" id="badge-era">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About Era">?</button>
-                                <span class="tooltip-body">80s = bold, simple graphics. 90s = detailed, airbrushed. Y2K = 2000–2006. Check neck tag for copyright year.</span>
-                            </span>
+                {% for brand_id, brand_cfg in brands.items() %}
+                <div id="panel-{{ brand_id }}"
+                     class="signals-panel {% if brand_id == selected_brand %}active{% endif %}">
+                    <div class="fields-grid">
+                        {% for sig in brand_cfg.signals %}
+                        <div class="field">
+                            <div class="field-label-row">
+                                <label>{{ sig.label }}</label>
+                                <span class="ai-badge" id="badge-{{ brand_id }}-{{ sig.id }}">AI</span>
+                                <span class="tooltip-wrap">
+                                    <button type="button" class="tooltip-btn" aria-label="About {{ sig.label }}">?</button>
+                                    <span class="tooltip-body">{{ sig.tooltip }}</span>
+                                </span>
+                            </div>
+                            {% if sig.type == 'select' %}
+                            <select name="{{ sig.id }}"
+                                    id="field-{{ brand_id }}-{{ sig.id }}"
+                                    {% if brand_id != selected_brand %}disabled{% endif %}>
+                                {% for opt_val, opt_label in sig.options %}
+                                <option value="{{ opt_val }}"
+                                    {% if brand_id == selected_brand and form_data.get(sig.id, sig.options[0][0]) == opt_val %}selected{% endif %}>
+                                    {{ opt_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <select name="{{ sig.id }}"
+                                    id="field-{{ brand_id }}-{{ sig.id }}"
+                                    {% if brand_id != selected_brand %}disabled{% endif %}>
+                                <option value="0" {% if brand_id == selected_brand and form_data.get(sig.id, '0') == '0' %}selected{% endif %}>No</option>
+                                <option value="1" {% if brand_id == selected_brand and form_data.get(sig.id) == '1' %}selected{% endif %}>Yes</option>
+                            </select>
+                            {% endif %}
                         </div>
-                        <select name="era" id="field-era">
-                            <option value="unknown" {% if form_data.get('era','unknown') == 'unknown' %}selected{% endif %}>Unknown</option>
-                            <option value="80s" {% if form_data.get('era') == '80s' %}selected{% endif %}>80s</option>
-                            <option value="90s" {% if form_data.get('era') == '90s' %}selected{% endif %}>90s</option>
-                            <option value="y2k" {% if form_data.get('era') == 'y2k' %}selected{% endif %}>Y2K / 2000s</option>
-                        </select>
+                        {% endfor %}
                     </div>
-
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="size">Size</label>
-                            <span class="ai-badge" id="badge-size">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About Size">?</button>
-                                <span class="tooltip-body">Check the neck tag or side seam tag. Vintage tees often run 1–2 sizes small vs modern sizing.</span>
-                            </span>
-                        </div>
-                        <select name="size" id="field-size">
-                            <option value="unknown" {% if form_data.get('size','unknown') == 'unknown' %}selected{% endif %}>Unknown</option>
-                            <option value="S" {% if form_data.get('size') == 'S' %}selected{% endif %}>S</option>
-                            <option value="M" {% if form_data.get('size') == 'M' %}selected{% endif %}>M</option>
-                            <option value="L" {% if form_data.get('size') == 'L' %}selected{% endif %}>L</option>
-                            <option value="XL" {% if form_data.get('size') == 'XL' %}selected{% endif %}>XL</option>
-                            <option value="2XL" {% if form_data.get('size') == '2XL' %}selected{% endif %}>2XL</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="emblem">3D Emblem</label>
-                            <span class="ai-badge" id="badge-emblem">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About 3D Emblem">?</button>
-                                <span class="tooltip-body">The Harley shield logo is raised or embossed — not flat-printed. Common on 90s dealer tees, adds significant value.</span>
-                            </span>
-                        </div>
-                        <select name="emblem" id="field-emblem">
-                            <option value="0" {% if form_data.get('emblem','0') == '0' %}selected{% endif %}>No</option>
-                            <option value="1" {% if form_data.get('emblem') == '1' %}selected{% endif %}>Yes</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="single_stitch">Single Stitch</label>
-                            <span class="ai-badge" id="badge-single_stitch">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About Single Stitch">?</button>
-                                <span class="tooltip-body">Single row of stitching along sleeve and bottom hems. Vintage construction pre-1996. Flip the sleeve to check.</span>
-                            </span>
-                        </div>
-                        <select name="single_stitch" id="field-single_stitch">
-                            <option value="0" {% if form_data.get('single_stitch','0') == '0' %}selected{% endif %}>No</option>
-                            <option value="1" {% if form_data.get('single_stitch') == '1' %}selected{% endif %}>Yes</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="location">Location Name</label>
-                            <span class="ai-badge" id="badge-location">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About Location Name">?</button>
-                                <span class="tooltip-body">A specific city, state, or dealership name is printed on the shirt (e.g. "Daytona Beach", "Las Vegas H-D").</span>
-                            </span>
-                        </div>
-                        <select name="location" id="field-location">
-                            <option value="0" {% if form_data.get('location','0') == '0' %}selected{% endif %}>No</option>
-                            <option value="1" {% if form_data.get('location') == '1' %}selected{% endif %}>Yes</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <div class="field-label-row">
-                            <label for="event">Event Tee</label>
-                            <span class="ai-badge" id="badge-event">AI</span>
-                            <span class="tooltip-wrap">
-                                <button type="button" class="tooltip-btn" aria-label="About Event Tee">?</button>
-                                <span class="tooltip-body">References a specific rally, run, or event — e.g. "Sturgis 1994", "HOG Rally", "Bike Week". Not a generic dealer tee.</span>
-                            </span>
-                        </div>
-                        <select name="event" id="field-event">
-                            <option value="0" {% if form_data.get('event','0') == '0' %}selected{% endif %}>No</option>
-                            <option value="1" {% if form_data.get('event') == '1' %}selected{% endif %}>Yes</option>
-                        </select>
-                    </div>
-
                 </div>
+                {% endfor %}
+
                 <button type="submit" class="submit-btn" id="submitBtn">Get Price Range</button>
             </form>
         </div>
@@ -626,7 +598,7 @@
                     <p class="result-price">{{ result }}</p>
                 </div>
                 <div class="result-right">
-                    <span class="result-chip">HD · Tee</span>
+                    <span class="result-chip">{{ brands[selected_brand].short }} · Tee</span>
                     <p class="result-confidence">±15% interval</p>
                 </div>
             </div>
@@ -640,17 +612,47 @@
     </div>
 </main>
 
-<footer>RPM · Rogue Pricing Model · HD v1.1 · Internal Use Only</footer>
+<footer>RPM · Rogue Pricing Model · v1.2 · Internal Use Only</footer>
 
 <script>
-    const FIELD_MAP = {
-        era:            { id: 'field-era',          badge: 'badge-era',          aiKey: 'era' },
-        size:           { id: 'field-size',         badge: 'badge-size',         aiKey: 'size' },
-        emblem:         { id: 'field-emblem',       badge: 'badge-emblem',       aiKey: 'has_3d_emblem' },
-        single_stitch:  { id: 'field-single_stitch',badge: 'badge-single_stitch',aiKey: 'has_single_stitch' },
-        location:       { id: 'field-location',     badge: 'badge-location',     aiKey: 'has_location_name' },
-        event:          { id: 'field-event',        badge: 'badge-event',        aiKey: 'is_event_tee' }
+    const BRANDS_CONFIG = {{ brands_json | safe }};
+    const BRAND_LABELS = {
+        {% for brand_id, brand_cfg in brands.items() %}
+        "{{ brand_id }}": { label: "{{ brand_cfg.label }}", short: "{{ brand_cfg.short }}" },
+        {% endfor %}
     };
+
+    let currentBrand = "{{ selected_brand }}";
+
+    function selectBrand(brandId, btn) {
+        if (brandId === currentBrand) return;
+
+        // Deactivate old brand
+        document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.signals-panel').forEach(p => {
+            p.classList.remove('active');
+            p.querySelectorAll('select').forEach(s => s.disabled = true);
+        });
+
+        // Activate new brand
+        btn.classList.add('active');
+        const panel = document.getElementById('panel-' + brandId);
+        panel.classList.add('active');
+        panel.querySelectorAll('select').forEach(s => s.disabled = false);
+
+        // Update hidden input and header pill
+        document.getElementById('brandInput').value = brandId;
+        document.getElementById('versionPill').textContent =
+            BRAND_LABELS[brandId].short + ' · v1.2';
+
+        // Clear AI state
+        document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
+        document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
+        document.getElementById('aiSourceBadge').classList.remove('visible');
+        setState('default');
+
+        currentBrand = brandId;
+    }
 
     function setState(name) {
         document.getElementById('stateDefault').hidden = name !== 'default';
@@ -674,7 +676,7 @@
         document.getElementById('uploadZone').classList.add('dragover');
     }
 
-    function handleDragLeave(e) {
+    function handleDragLeave() {
         document.getElementById('uploadZone').classList.remove('dragover');
     }
 
@@ -691,9 +693,7 @@
 
     function processFile(file) {
         const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById('previewThumb').src = e.target.result;
-        };
+        reader.onload = e => { document.getElementById('previewThumb').src = e.target.result; };
         reader.readAsDataURL(file);
 
         setState('loading');
@@ -701,6 +701,7 @@
 
         const formData = new FormData();
         formData.append('photo', file);
+        formData.append('brand', currentBrand);
 
         fetch('/analyze', { method: 'POST', body: formData })
             .then(r => r.json())
@@ -719,47 +720,39 @@
     }
 
     function fillForm(features) {
+        const signals = BRANDS_CONFIG[currentBrand].signals;
         let filled = 0;
 
-        // Era
-        const eraVal = features.era || 'unknown';
-        setField('field-era', eraVal, eraVal !== 'unknown');
-        if (eraVal !== 'unknown') filled++;
+        signals.forEach(sig => {
+            const aiKey = sig.ai_key;
+            const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
+            const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
+            if (!fieldEl || features[aiKey] === undefined) return;
 
-        // Size
-        const sizeVal = features.size || 'unknown';
-        setField('field-size', sizeVal, sizeVal !== 'unknown');
-        if (sizeVal !== 'unknown') filled++;
+            let value;
+            if (sig.type === 'bool') {
+                value = features[aiKey] ? '1' : '0';
+            } else {
+                value = features[aiKey] || sig.options[0][0];
+            }
 
-        // Booleans
-        const boolFields = [
-            { formId: 'field-emblem',       key: 'has_3d_emblem',     badge: 'badge-emblem' },
-            { formId: 'field-single_stitch',key: 'has_single_stitch', badge: 'badge-single_stitch' },
-            { formId: 'field-location',     key: 'has_location_name', badge: 'badge-location' },
-            { formId: 'field-event',        key: 'is_event_tee',      badge: 'badge-event' },
-        ];
+            fieldEl.value = value;
 
-        boolFields.forEach(f => {
-            const val = features[f.key] ? '1' : '0';
-            setField(f.formId, val, true);
-            if (features[f.key]) filled++;
+            const isKnown = sig.type === 'bool' ? features[aiKey] : (value !== 'unknown' && value !== sig.options[0][0]);
+            fieldEl.classList.toggle('ai-filled', true);
+            if (badgeEl) badgeEl.classList.toggle('visible', isKnown);
+            if (isKnown) filled++;
         });
 
-        document.getElementById('previewCount').textContent = filled + ' signal' + (filled === 1 ? '' : 's') + ' detected';
+        document.getElementById('previewCount').textContent =
+            filled + ' signal' + (filled === 1 ? '' : 's') + ' detected';
         document.getElementById('aiSourceBadge').classList.add('visible');
     }
 
-    function setField(id, value, showBadge) {
-        const select = document.getElementById(id);
-        select.value = value;
-        select.classList.toggle('ai-filled', showBadge);
+    // Update version pill on load to match selected brand
+    document.getElementById('versionPill').textContent =
+        BRAND_LABELS[currentBrand].short + ' · v1.2';
 
-        const badgeId = 'badge-' + id.replace('field-', '');
-        const badge = document.getElementById(badgeId);
-        if (badge) badge.classList.toggle('visible', showBadge);
-    }
-
-    // Scroll to result on page load if present
     {% if result %}
     window.addEventListener('load', () => {
         document.querySelector('.result-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
