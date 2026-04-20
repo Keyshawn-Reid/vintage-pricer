@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        [hidden] { display: none !important; }
 
         :root {
             --yellow: hsl(56, 100%, 64%);
@@ -149,7 +150,7 @@
         /* Upload zone — white block on dot grid */
         .upload-zone {
             width: 100%;
-            min-height: 256px;
+            min-height: 220px;
             background: #fff;
             border: 1.5px dashed var(--border);
             display: flex; align-items: center; justify-content: center;
@@ -202,30 +203,9 @@
             text-transform: uppercase;
         }
 
-        .upload-loading {
-            display: flex; flex-direction: column;
-            align-items: center; gap: 14px;
-        }
-
-        .spinner {
-            width: 28px; height: 28px;
-            border: 2px solid var(--border-light);
-            border-top-color: var(--text);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-label {
-            font-family: 'Space Mono', monospace;
-            font-size: 10px; color: var(--text-muted);
-            letter-spacing: 0.1em; text-transform: uppercase;
-        }
-
         .upload-preview {
-            display: flex; align-items: center;
-            gap: 20px; padding: 2rem; text-align: left;
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 16px; padding: 1.5rem; text-align: left;
         }
 
         .preview-thumb {
@@ -506,17 +486,23 @@
         /* ── Mobile ── */
         @media (max-width: 640px) {
             header { padding: 0 1.25rem; }
-            .hero { padding: 96px 1.25rem 52px; }
-            .tool { padding: 32px 1.25rem 8rem; }
+            .hero { padding: 96px 1.25rem 48px; }
+            .tool { padding: 28px 1.25rem 8rem; }
             .section-rule { padding: 0 1.25rem; }
             footer { padding: 1.5rem 1.25rem; }
             .logo-sub { display: none; }
             .logo-divider { display: none; }
+            .upload-zone { min-height: 160px; }
+            .upload-state { padding: 1.5rem; }
+            .upload-label { font-size: 18px; }
+            .upload-preview { padding: 1.25rem; gap: 12px; }
+            .preview-thumb { width: 56px; height: 56px; }
+            .preview-change { align-self: flex-start; }
             .fields-grid { grid-template-columns: 1fr 1fr; }
-            .features-header { padding: 16px 20px 14px; }
-            .brand-field-wrap { padding: 16px 20px 18px; }
-            .form-footer { padding: 16px 20px; }
-            .field { padding: 16px; }
+            .features-header { padding: 14px 16px 12px; }
+            .brand-field-wrap { padding: 14px 16px 16px; }
+            .form-footer { padding: 14px 16px; }
+            .field { padding: 14px 16px; }
         }
 
         @media (max-width: 400px) {
@@ -569,11 +555,6 @@
                 </div>
                 <p class="upload-label">Drop a photo here</p>
                 <p class="upload-hint">Tag · Front · Back<br>Brand and signals auto-detected</p>
-            </div>
-
-            <div class="upload-state upload-loading" id="stateLoading" hidden>
-                <div class="spinner"></div>
-                <p class="loading-label">Reading signals...</p>
             </div>
 
             <div class="upload-state upload-preview" id="statePreview" hidden>
@@ -715,7 +696,6 @@
 
     function setState(name) {
         document.getElementById('stateDefault').hidden = name !== 'default';
-        document.getElementById('stateLoading').hidden = name !== 'loading';
         document.getElementById('statePreview').hidden = name !== 'preview';
         document.getElementById('uploadZone').style.cursor = name === 'preview' ? 'default' : 'pointer';
     }
@@ -751,11 +731,15 @@
     }
 
     function processFile(file) {
+        // Show thumbnail immediately — no spinner
         const reader = new FileReader();
-        reader.onload = e => { document.getElementById('previewThumb').src = e.target.result; };
+        reader.onload = e => {
+            document.getElementById('previewThumb').src = e.target.result;
+            document.getElementById('previewCount').textContent = 'Analyzing...';
+            setState('preview');
+        };
         reader.readAsDataURL(file);
 
-        setState('loading');
         document.getElementById('submitBtn').disabled = true;
 
         const fd = new FormData();
@@ -766,16 +750,11 @@
             .then(r => r.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);
-
-                // If backend returns detected_brand, switch to it
                 if (data.detected_brand && data.detected_brand !== currentBrand) {
-                    const brandSel = document.getElementById('brandSelect');
-                    brandSel.value = data.detected_brand;
+                    document.getElementById('brandSelect').value = data.detected_brand;
                     handleBrandChange(data.detected_brand);
                 }
-
                 fillForm(data);
-                setState('preview');
             })
             .catch(err => {
                 setState('default');
