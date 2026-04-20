@@ -1,6 +1,8 @@
 import os
 import base64
 import json
+import io
+from PIL import Image
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -13,9 +15,19 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+MAX_DIMENSION = 1600
+JPEG_QUALITY = 85
+
+def _compress_image(image_path):
+    with Image.open(image_path) as img:
+        img = img.convert("RGB")
+        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=JPEG_QUALITY)
+        return buf.getvalue()
+
 def extract_features_from_image(image_path):
-    with open(image_path, "rb") as f:
-        image_data = base64.b64encode(f.read()).decode("utf-8")
+    image_data = base64.b64encode(_compress_image(image_path)).decode("utf-8")
 
     prompt = """You are an expert vintage Harley Davidson t-shirt appraiser. 
     Analyze this image carefully and extract the following signals.
