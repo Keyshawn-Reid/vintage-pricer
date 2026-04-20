@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split
@@ -80,6 +80,22 @@ def index():
             result = f"${low:.2f} - ${high:.2f}"
 
     return render_template("index.html", result=result, form_data=form_data, extracted=extracted, error=error, mode=request.form.get("mode", "manual"))
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    photo = request.files.get("photo")
+    if not photo:
+        return jsonify({"error": "No photo provided"}), 400
+    path = "temp_analyze.jpg"
+    photo.save(path)
+    try:
+        features = extract_features_from_image(path)
+        return jsonify(features)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
 
 if __name__ == "__main__":
     app.run(debug=True)
