@@ -4,338 +4,410 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>RPM — Rogue Pricing Model</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --yellow: #FFE600;
-            --yellow-mid: #F5D800;
-            --yellow-dim: rgba(255, 230, 0, 0.14);
-            --yellow-border: rgba(200, 170, 0, 0.3);
-            --bg: #F4F4F1;
-            --surface: #FFFFFF;
-            --surface-2: #F8F8F6;
-            --border: rgba(0,0,0,0.08);
-            --border-strong: rgba(0,0,0,0.13);
-            --text: #111110;
-            --text-muted: #888884;
-            --text-light: #BCBCB8;
-            --radius: 8px;
-            --radius-lg: 14px;
+            --yellow: hsl(56, 100%, 64%);
+            --yellow-dim: hsla(56, 100%, 64%, 0.10);
+            --yellow-dark: hsl(50, 90%, 48%);
+            --text: hsl(64, 8%, 14%);
+            --text-muted: hsl(64, 8%, 50%);
+            --text-light: hsl(64, 8%, 72%);
+            --border: hsl(64, 8%, 82%);
+            --border-light: hsl(64, 8%, 90%);
+            --surface: hsl(64, 8%, 97%);
+            --dot: #E3E3DE;
         }
 
         body {
             font-family: 'Space Grotesk', sans-serif;
-            background: var(--bg);
             color: var(--text);
+            background-color: #fff;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><rect width='2' height='2' fill='%23E3E3DE'/></svg>");
+            background-size: 24px 24px;
             min-height: 100vh;
-            min-height: -webkit-fill-available;
-            display: flex;
-            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* ── Header ── */
         header {
-            padding: 0 1.5rem;
+            position: fixed; top: 0; left: 0; right: 0;
             height: 52px;
             display: flex; align-items: center; justify-content: space-between;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 10;
+            padding: 0 2rem;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 100;
         }
 
         .logo { display: flex; align-items: center; gap: 10px; }
 
-        .logo-globe {
-            width: 28px; height: 28px;
+        .logo-mark {
+            width: 22px; height: 22px;
             background: var(--yellow);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
         }
 
-        .logo-globe svg {
-            width: 14px; height: 14px;
-            stroke: #111110; fill: none;
-            stroke-width: 1.8; stroke-linecap: round;
-        }
-
-        .logo-text { display: flex; flex-direction: column; gap: 2px; }
-
-        .logo-rpm {
+        .logo-wordmark {
             font-family: 'Space Mono', monospace;
-            font-size: 12px; font-weight: 700;
-            color: var(--text); letter-spacing: 0.12em; line-height: 1;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .logo-divider {
+            width: 1px; height: 14px;
+            background: var(--border);
+            margin: 0 2px;
         }
 
         .logo-sub {
-            font-size: 9px; color: var(--text-muted);
-            letter-spacing: 0.07em; text-transform: uppercase; line-height: 1;
-        }
-
-        .version-pill {
             font-family: 'Space Mono', monospace;
-            font-size: 10px; color: var(--text-muted);
-            background: var(--surface-2);
-            border: 1px solid var(--border-strong);
-            padding: 4px 10px; border-radius: 20px; letter-spacing: 0.05em;
-            transition: all 0.2s;
+            font-size: 9px; color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
-        main {
-            flex: 1;
-            max-width: 480px; width: 100%;
+        .header-right {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 120px 2rem 72px;
+            max-width: 720px;
             margin: 0 auto;
-            padding: 1.75rem 1rem 6rem;
         }
 
-        .eyebrow {
+        .hero-eyebrow {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; color: var(--text-muted);
-            letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px;
         }
 
-        .page-heading {
-            font-size: 22px; font-weight: 600;
-            letter-spacing: -0.025em; color: var(--text);
-            margin-bottom: 1.25rem; line-height: 1.1;
-        }
-
-        .page-heading em {
-            font-style: normal;
+        .hero-eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 8px;
             background: var(--yellow);
-            padding: 0 4px; border-radius: 3px;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        .hero-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(52px, 8vw, 88px);
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.025em;
+            color: var(--text);
+            margin-bottom: 28px;
         }
 
-        /* ── Brand selector ── */
-        .brand-section {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border);
+        .hero-headline .hl {
+            font-style: italic;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-headline .hl::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: 4px;
+            width: 100%; height: 10px;
+            background: var(--yellow);
+            z-index: -1;
+            transform: skewX(-3deg);
+        }
+
+        .hero-sub {
+            font-size: 15px; font-weight: 400;
+            color: var(--text-muted);
+            line-height: 1.65;
+            max-width: 400px;
+        }
+
+        /* ── Divider ── */
+        .section-rule {
+            max-width: 720px; margin: 0 auto;
+            padding: 0 2rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* ── Tool section ── */
+        .tool {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 2rem 10rem;
+        }
+
+        /* Brand switcher */
+        .brand-switcher {
+            display: flex;
+            gap: 0;
+            padding-top: 32px;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border-light);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        .brand-pills {
-            display: flex; gap: 6px;
-            white-space: nowrap;
-        }
-
-        .brand-btn {
-            padding: 7px 14px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 13px; font-weight: 500;
+        .brand-tab {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
             color: var(--text-muted);
-            background: var(--surface-2);
-            border: 1px solid var(--border-strong);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.15s;
-            white-space: nowrap;
-            min-height: 36px;
+            padding: 10px 24px 10px 0;
+            border: none; background: none; cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: color 0.15s, border-color 0.15s;
+            white-space: nowrap; flex-shrink: 0;
         }
 
-        .brand-btn:hover:not(.active) {
-            border-color: rgba(0,0,0,0.2);
+        .brand-tab.active {
             color: var(--text);
+            border-bottom-color: var(--yellow);
         }
 
-        .brand-btn.active {
-            background: var(--text);
-            border-color: var(--text);
-            color: var(--yellow);
-            font-weight: 600;
+        .brand-tab:hover:not(.active) { color: var(--text); }
+
+        .no-data-flag {
+            font-size: 8px; color: var(--text-light);
+            vertical-align: middle; margin-left: 3px;
         }
 
-        .no-model-badge {
-            font-size: 9px;
-            color: var(--text-light);
-            margin-left: 4px;
-        }
-
-        /* ── Photo zone ── */
-        .photo-section {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
-        }
-
+        /* Upload zone */
         .upload-zone {
-            border: 1.5px dashed var(--border-strong);
-            border-radius: var(--radius);
-            padding: 1.75rem 1rem;
-            text-align: center;
-            background: var(--surface-2);
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
-            min-height: 110px;
+            width: 100%;
+            min-height: 260px;
+            border: 1.5px dashed var(--border);
             display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 0;
+            position: relative;
+            background: transparent;
         }
 
         .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--yellow-mid);
+            border-color: var(--text);
             background: var(--yellow-dim);
         }
 
-        .upload-state { width: 100%; }
+        .upload-state { width: 100%; text-align: center; padding: 2rem; }
 
-        .upload-icon {
-            width: 40px; height: 40px;
-            background: var(--yellow-dim);
-            border: 1px solid var(--yellow-border);
+        .upload-icon-wrap {
+            width: 48px; height: 48px;
+            border: 1.5px solid var(--border);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 10px;
+            margin: 0 auto 16px;
+            transition: border-color 0.2s, background 0.2s;
         }
 
-        .upload-icon svg {
-            width: 17px; height: 17px;
-            stroke: #888800; fill: none;
-            stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+        .upload-zone:hover .upload-icon-wrap {
+            border-color: var(--text);
+            background: var(--yellow);
         }
 
-        .upload-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-        .upload-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+        .upload-icon-wrap svg {
+            width: 18px; height: 18px;
+            stroke: var(--text-muted); fill: none;
+            stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+            transition: stroke 0.2s;
+        }
 
-        .upload-loading { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .upload-zone:hover .upload-icon-wrap svg { stroke: var(--text); }
+
+        .upload-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px; font-weight: 700;
+            color: var(--text); margin-bottom: 6px;
+        }
+
+        .upload-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; color: var(--text-muted);
+            letter-spacing: 0.06em; line-height: 1.7;
+            text-transform: uppercase;
+        }
+
+        /* Loading state */
+        .upload-loading {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 14px;
+        }
 
         .spinner {
             width: 28px; height: 28px;
-            border: 2.5px solid var(--yellow-dim);
-            border-top-color: var(--yellow-mid);
+            border: 2px solid var(--border);
+            border-top-color: var(--text);
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-text {
+        .loading-label {
             font-family: 'Space Mono', monospace;
-            font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em;
+            font-size: 10px; color: var(--text-muted);
+            letter-spacing: 0.1em; text-transform: uppercase;
         }
 
-        .upload-preview { display: flex; align-items: center; gap: 12px; text-align: left; }
+        /* Preview state */
+        .upload-preview {
+            display: flex; align-items: center;
+            gap: 20px; padding: 2rem; text-align: left;
+        }
 
         .preview-thumb {
-            width: 56px; height: 56px;
-            border-radius: 6px; object-fit: cover;
-            border: 1px solid var(--border-strong); flex-shrink: 0;
+            width: 72px; height: 72px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         .preview-info { flex: 1; min-width: 0; }
-        .preview-status { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-        .preview-count { font-size: 11px; color: var(--text-muted); }
+
+        .preview-status {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px; font-weight: 700;
+            color: var(--text); margin-bottom: 4px;
+        }
+
+        .preview-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; color: var(--text-muted);
+            letter-spacing: 0.06em; text-transform: uppercase;
+        }
 
         .preview-change {
             font-family: 'Space Mono', monospace;
-            font-size: 10px; color: var(--text-muted);
-            background: none; border: 1px solid var(--border-strong);
-            padding: 5px 10px; border-radius: 6px; cursor: pointer;
-            white-space: nowrap; flex-shrink: 0;
-            transition: border-color 0.15s;
+            font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--text-muted); background: none;
+            border: 1px solid var(--border); padding: 7px 14px;
+            cursor: pointer; flex-shrink: 0;
+            transition: border-color 0.15s, color 0.15s;
         }
 
-        .preview-change:hover { border-color: rgba(0,0,0,0.25); }
+        .preview-change:hover { border-color: var(--text); color: var(--text); }
 
         input[type="file"] { display: none; }
 
-        /* ── Signals form ── */
-        .signals-section { padding: 1.25rem; }
+        /* ── Signals ── */
+        .signals-wrap { padding-top: 40px; }
 
-        .section-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 1rem;
+        .signals-header {
+            display: flex; align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 32px;
         }
 
-        .section-label {
+        .signals-label {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; letter-spacing: 0.12em;
-            text-transform: uppercase; color: var(--text-muted);
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-muted);
         }
 
-        .ai-source-badge {
+        .ai-detected-note {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; color: #1A7A40;
-            background: rgba(26,122,64,0.08);
-            border: 1px solid rgba(26,122,64,0.2);
-            padding: 3px 8px; border-radius: 20px;
-            letter-spacing: 0.06em; display: none;
+            font-size: 9px; letter-spacing: 0.08em;
+            color: var(--text);
+            background: var(--yellow);
+            padding: 3px 8px;
+            display: none;
         }
 
-        .ai-source-badge.visible { display: inline; }
+        .ai-detected-note.visible { display: inline; }
 
         .signals-panel { display: none; }
         .signals-panel.active { display: block; }
 
         .fields-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0 12px;
+            grid-template-columns: repeat(3, 1fr);
+            border-top: 1px solid var(--border-light);
+            border-left: 1px solid var(--border-light);
         }
 
-        .field { margin-bottom: 0.85rem; }
+        .field {
+            padding: 20px 20px 20px 20px;
+            border-right: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+        }
 
         .field-label-row {
-            display: flex; align-items: center; gap: 5px;
-            margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
+            margin-bottom: 10px;
         }
 
         label {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; letter-spacing: 0.1em;
-            text-transform: uppercase; color: var(--text-muted); line-height: 1;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-muted); line-height: 1;
+            cursor: default;
         }
 
         .ai-badge {
             font-family: 'Space Mono', monospace;
-            font-size: 8px; font-weight: 700;
-            color: #111110; background: var(--yellow);
-            padding: 1px 5px; border-radius: 3px;
-            letter-spacing: 0.05em; display: none;
+            font-size: 7px; font-weight: 700;
+            background: var(--yellow); color: var(--text);
+            padding: 1px 4px; letter-spacing: 0.06em;
+            display: none;
         }
 
         .ai-badge.visible { display: inline; }
 
+        /* Tooltip */
         .tooltip-wrap { position: relative; display: inline-flex; }
 
         .tooltip-btn {
-            width: 14px; height: 14px;
-            background: none; border: 1px solid var(--border-strong);
+            width: 13px; height: 13px;
+            background: none; border: 1px solid var(--border);
             border-radius: 50%; cursor: pointer;
-            font-size: 8px; color: var(--text-muted);
+            font-size: 7px; color: var(--text-muted);
             display: flex; align-items: center; justify-content: center;
             padding: 0; line-height: 1; flex-shrink: 0;
-            transition: border-color 0.15s, color 0.15s;
+            transition: border-color 0.15s;
         }
 
         .tooltip-btn:hover, .tooltip-btn:focus {
-            border-color: var(--text-muted); color: var(--text); outline: none;
+            border-color: var(--text-muted); outline: none;
         }
 
         .tooltip-body {
             position: absolute;
-            bottom: calc(100% + 6px);
-            left: 50%; transform: translateX(-50%);
-            background: var(--text); color: #fff;
+            bottom: calc(100% + 8px); left: 50%;
+            transform: translateX(-50%);
+            background: var(--text); color: rgba(255,255,255,0.9);
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 11px; font-weight: 400; line-height: 1.45;
-            padding: 8px 10px; border-radius: 6px;
-            width: 180px; text-transform: none; letter-spacing: 0;
+            font-size: 11px; font-weight: 400; line-height: 1.5;
+            padding: 10px 12px; width: 190px;
+            text-transform: none; letter-spacing: 0;
             pointer-events: none; opacity: 0;
-            transition: opacity 0.15s; z-index: 20;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: opacity 0.15s; z-index: 50;
             white-space: normal;
         }
 
         .tooltip-body::after {
             content: '';
-            position: absolute;
-            top: 100%; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 100%; left: 50%;
+            transform: translateX(-50%);
             border: 5px solid transparent;
             border-top-color: var(--text);
         }
@@ -343,115 +415,145 @@
         .tooltip-wrap:hover .tooltip-body,
         .tooltip-btn:focus ~ .tooltip-body { opacity: 1; }
 
+        /* Select — underline style */
         select {
-            width: 100%; padding: 10px 12px;
+            width: 100%;
+            border: none;
+            border-bottom: 1.5px solid var(--border);
+            border-radius: 0;
+            background: transparent;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 14px; color: var(--text);
-            background: var(--surface-2);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius);
-            appearance: none; -webkit-appearance: none;
+            font-size: 14px; font-weight: 500;
+            color: var(--text);
+            padding: 6px 24px 8px 0;
             cursor: pointer; outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s;
+            appearance: none; -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23BCBCB8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 11px center;
-            padding-right: 30px;
-            min-height: 44px;
+            background-position: right 2px center;
+            transition: border-color 0.15s;
+            min-height: 38px;
         }
 
-        select:focus {
-            border-color: var(--yellow-mid);
-            box-shadow: 0 0 0 3px var(--yellow-dim);
-            background-color: var(--surface);
+        select:focus { border-bottom-color: var(--text); }
+        select:hover:not(:focus) { border-bottom-color: var(--text-muted); }
+
+        select.ai-filled {
+            border-bottom-color: var(--yellow-dark);
+            color: var(--text);
         }
 
-        select:hover:not(:focus) { border-color: rgba(0,0,0,0.2); }
-        select.ai-filled { border-color: rgba(200,170,0,0.5); background-color: rgba(255,230,0,0.05); }
+        /* Submit */
+        .form-footer { margin-top: 40px; }
 
         .submit-btn {
-            width: 100%; margin-top: 0.5rem;
-            padding: 14px;
-            background: var(--yellow); color: #111110;
-            border: none; border-radius: var(--radius);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 14px; font-weight: 600;
-            cursor: pointer; letter-spacing: 0.02em;
-            transition: background 0.15s, transform 0.1s;
-            min-height: 44px;
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--text); color: var(--yellow);
+            border: none; cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            transition: background 0.15s;
+            min-height: 52px;
         }
 
-        .submit-btn:hover { background: var(--yellow-mid); }
-        .submit-btn:active { transform: scale(0.99); }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .submit-btn:hover { background: hsl(64, 8%, 22%); }
+        .submit-btn:active { background: hsl(64, 8%, 10%); }
+        .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* ── Result ── */
-        .result-section { padding: 0 1.25rem 1.25rem; }
-
-        .result-box {
-            padding: 1.1rem 1.25rem;
-            background: var(--text);
-            border-radius: var(--radius);
-            display: flex; align-items: center; justify-content: space-between;
-            animation: rise 0.25s ease;
+        .result-section {
+            padding-top: 56px;
+            animation: rise 0.3s ease;
         }
 
         @keyframes rise {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .result-label {
+        .result-eyebrow {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; letter-spacing: 0.12em;
-            text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .result-eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--yellow);
+            flex-shrink: 0;
         }
 
         .result-price {
-            font-family: 'Space Mono', monospace;
-            font-size: 26px; font-weight: 700;
-            color: var(--yellow); letter-spacing: -0.02em; line-height: 1;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(44px, 7vw, 80px);
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.025em;
+            color: var(--text);
+            margin-bottom: 16px;
         }
 
-        .result-right { text-align: right; }
-
-        .result-chip {
+        .result-meta {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; color: #111110;
-            background: var(--yellow); padding: 5px 10px;
-            border-radius: 20px; letter-spacing: 0.08em;
-            text-transform: uppercase; white-space: nowrap;
-            font-weight: 700; display: inline-block; margin-bottom: 6px;
+            font-size: 9px; color: var(--text-muted);
+            letter-spacing: 0.1em; text-transform: uppercase;
         }
 
-        .result-confidence { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.03em; }
+        .result-divider {
+            width: 100%; height: 1px;
+            background: var(--border-light);
+            margin-top: 40px;
+        }
 
+        /* Error */
         .error-msg {
-            margin: 0 1.25rem 1.25rem;
-            padding: 11px 14px;
-            background: #FFF0F0;
-            border: 1px solid rgba(200,50,50,0.15);
-            border-radius: var(--radius);
-            font-size: 12px; color: #C0392B;
-            animation: rise 0.2s ease;
+            margin-top: 32px;
+            padding: 14px 16px;
+            border-left: 3px solid #e55;
+            font-size: 13px; color: #c33;
+            background: rgba(200,50,50,0.04);
         }
 
+        /* ── Footer ── */
         footer {
-            text-align: center; padding: 1.25rem;
+            max-width: 720px; margin: 0 auto;
+            padding: 2rem;
+            border-top: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .footer-left {
             font-family: 'Space Mono', monospace;
-            font-size: 9px; letter-spacing: 0.08em;
-            color: var(--text-light);
-            border-top: 1px solid var(--border);
-            text-transform: uppercase;
+            font-size: 9px; color: var(--text-light);
+            letter-spacing: 0.08em; text-transform: uppercase;
+        }
+
+        .footer-mark {
+            width: 16px; height: 16px;
+            background: var(--yellow);
+            border-radius: 50%;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 640px) {
+            .hero { padding: 100px 1.25rem 56px; }
+            .tool { padding: 0 1.25rem 8rem; }
+            .fields-grid { grid-template-columns: 1fr 1fr; }
+            footer { padding: 1.5rem 1.25rem; }
+            header { padding: 0 1.25rem; }
         }
 
         @media (max-width: 400px) {
-            main { padding: 1.25rem 0.75rem 6rem; }
-            .page-heading { font-size: 20px; }
-            .fields-grid { grid-template-columns: 1fr; gap: 0; }
-            .result-price { font-size: 22px; }
-            .tooltip-body { width: 160px; left: 0; transform: none; }
-            .tooltip-body::after { left: 14px; transform: none; }
+            .fields-grid { grid-template-columns: 1fr; }
+            .tooltip-body { left: 0; transform: none; }
+            .tooltip-body::after { left: 12px; transform: none; }
         }
     </style>
 </head>
@@ -459,87 +561,84 @@
 
 <header>
     <div class="logo">
-        <div class="logo-globe">
-            <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-        </div>
-        <div class="logo-text">
-            <span class="logo-rpm">RPM</span>
-            <span class="logo-sub">Rogue Pricing Model</span>
-        </div>
+        <div class="logo-mark"></div>
+        <span class="logo-wordmark">RPM</span>
+        <div class="logo-divider"></div>
+        <span class="logo-sub">Rogue Pricing Model</span>
     </div>
-    <span class="version-pill" id="versionPill">HD · v1.2</span>
+    <span class="header-right" id="headerBrand">{{ brands[selected_brand].short }} · v1.2</span>
 </header>
 
 <main>
-    <p class="eyebrow">Internal Tool</p>
-    <h1 class="page-heading">Price <em>estimator</em></h1>
 
-    <div class="card">
+    <!-- Hero -->
+    <section class="hero">
+        <p class="hero-eyebrow">Vintage Intelligence · Internal Tool</p>
+        <h1 class="hero-headline">
+            Know what<br>it's <span class="hl">worth.</span>
+        </h1>
+        <p class="hero-sub">Upload a photo — AI reads the signals and prices it. Harley Davidson, Ed Hardy, Hysteric Glamour.</p>
+    </section>
 
-        <!-- Brand selector -->
-        <div class="brand-section">
-            <div class="brand-pills">
-                {% for brand_id, brand_cfg in brands.items() %}
-                <button
-                    type="button"
-                    class="brand-btn {% if brand_id == selected_brand %}active{% endif %}"
-                    data-brand="{{ brand_id }}"
-                    data-short="{{ brand_cfg.short }}"
-                    onclick="selectBrand('{{ brand_id }}', this)">
-                    {{ brand_cfg.label }}
-                    {% if brand_id not in trained_brands %}
-                    <span class="no-model-badge">·&nbsp;no data</span>
-                    {% endif %}
-                </button>
-                {% endfor %}
+    <div class="section-rule"></div>
+
+    <!-- Tool -->
+    <section class="tool">
+
+        <!-- Brand tabs -->
+        <div class="brand-switcher">
+            {% for brand_id, brand_cfg in brands.items() %}
+            <button
+                type="button"
+                class="brand-tab {% if brand_id == selected_brand %}active{% endif %}"
+                data-brand="{{ brand_id }}"
+                data-short="{{ brand_cfg.short }}"
+                onclick="selectBrand('{{ brand_id }}', this)">
+                {{ brand_cfg.label }}{% if brand_id not in trained_brands %}<span class="no-data-flag">·&nbsp;no&nbsp;data</span>{% endif %}
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="uploadZone"
+             onclick="handleZoneClick()"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+
+            <div class="upload-state" id="stateDefault">
+                <div class="upload-icon-wrap">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <p class="upload-label">Drop a photo here</p>
+                <p class="upload-hint">Tag · Front · Back<br>Auto-analyzes on upload</p>
+            </div>
+
+            <div class="upload-state upload-loading" id="stateLoading" hidden>
+                <div class="spinner"></div>
+                <p class="loading-label">Reading signals...</p>
+            </div>
+
+            <div class="upload-state upload-preview" id="statePreview" hidden>
+                <img class="preview-thumb" id="previewThumb" alt="">
+                <div class="preview-info">
+                    <p class="preview-status">Photo analyzed</p>
+                    <p class="preview-count" id="previewCount"></p>
+                </div>
+                <button type="button" class="preview-change" onclick="changePhoto(event)">Change</button>
             </div>
         </div>
 
-        <!-- Photo upload -->
-        <div class="photo-section">
-            <div class="upload-zone" id="uploadZone"
-                 onclick="handleZoneClick()"
-                 ondragover="handleDragOver(event)"
-                 ondragleave="handleDragLeave(event)"
-                 ondrop="handleDrop(event)">
+        <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(this)">
 
-                <div class="upload-state" id="stateDefault">
-                    <div class="upload-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                    </div>
-                    <p class="upload-title">Upload a photo</p>
-                    <p class="upload-hint">Tag, front, or back — AI fills signals automatically</p>
-                </div>
-
-                <div class="upload-state upload-loading" id="stateLoading" hidden>
-                    <div class="spinner"></div>
-                    <p class="loading-text">Analyzing photo...</p>
-                </div>
-
-                <div class="upload-state upload-preview" id="statePreview" hidden>
-                    <img class="preview-thumb" id="previewThumb" alt="">
-                    <div class="preview-info">
-                        <p class="preview-status">Photo analyzed</p>
-                        <p class="preview-count" id="previewCount"></p>
-                    </div>
-                    <button type="button" class="preview-change" onclick="changePhoto(event)">Change</button>
-                </div>
-            </div>
-            <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(this)">
-        </div>
-
-        <!-- Signals form -->
-        <div class="signals-section">
-            <div class="section-header">
-                <span class="section-label">Signals</span>
-                <span class="ai-source-badge" id="aiSourceBadge">AI detected</span>
+        <!-- Signals + form -->
+        <div class="signals-wrap">
+            <div class="signals-header">
+                <span class="signals-label">Signals</span>
+                <span class="ai-detected-note" id="aiDetectedNote">AI&nbsp;detected</span>
             </div>
 
             <form method="POST" id="priceForm">
@@ -585,38 +684,37 @@
                 </div>
                 {% endfor %}
 
-                <button type="submit" class="submit-btn" id="submitBtn">Get Price Range</button>
+                <div class="form-footer">
+                    <button type="submit" class="submit-btn" id="submitBtn">Get Price Range</button>
+                </div>
             </form>
         </div>
 
         <!-- Result -->
         {% if result %}
         <div class="result-section">
-            <div class="result-box">
-                <div>
-                    <p class="result-label">Estimated Range</p>
-                    <p class="result-price">{{ result }}</p>
-                </div>
-                <div class="result-right">
-                    <span class="result-chip">{{ brands[selected_brand].short }} · Tee</span>
-                    <p class="result-confidence">±15% interval</p>
-                </div>
-            </div>
+            <p class="result-eyebrow">{{ brands[selected_brand].label }} · Estimated Range</p>
+            <p class="result-price">{{ result }}</p>
+            <p class="result-meta">± 15% confidence interval · XGBoost model</p>
+            <div class="result-divider"></div>
         </div>
         {% endif %}
 
         {% if error %}
-        <p class="error-msg">{{ error }}</p>
+        <div class="error-msg">{{ error }}</div>
         {% endif %}
 
-    </div>
+    </section>
 </main>
 
-<footer>RPM · Rogue Pricing Model · v1.2 · Internal Use Only</footer>
+<footer>
+    <span class="footer-left">RPM · Internal Use Only · v1.2</span>
+    <div class="footer-mark"></div>
+</footer>
 
 <script>
     const BRANDS_CONFIG = {{ brands_json | safe }};
-    const BRAND_LABELS = {
+    const BRAND_META = {
         {% for brand_id, brand_cfg in brands.items() %}
         "{{ brand_id }}": { label: "{{ brand_cfg.label }}", short: "{{ brand_cfg.short }}" },
         {% endfor %}
@@ -627,28 +725,23 @@
     function selectBrand(brandId, btn) {
         if (brandId === currentBrand) return;
 
-        // Deactivate old brand
-        document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.brand-tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.signals-panel').forEach(p => {
             p.classList.remove('active');
             p.querySelectorAll('select').forEach(s => s.disabled = true);
         });
 
-        // Activate new brand
         btn.classList.add('active');
         const panel = document.getElementById('panel-' + brandId);
         panel.classList.add('active');
         panel.querySelectorAll('select').forEach(s => s.disabled = false);
 
-        // Update hidden input and header pill
         document.getElementById('brandInput').value = brandId;
-        document.getElementById('versionPill').textContent =
-            BRAND_LABELS[brandId].short + ' · v1.2';
+        document.getElementById('headerBrand').textContent = BRAND_META[brandId].short + ' · v1.2';
 
-        // Clear AI state
         document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
         document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
-        document.getElementById('aiSourceBadge').classList.remove('visible');
+        document.getElementById('aiDetectedNote').classList.remove('visible');
         setState('default');
 
         currentBrand = brandId;
@@ -699,11 +792,11 @@
         setState('loading');
         document.getElementById('submitBtn').disabled = true;
 
-        const formData = new FormData();
-        formData.append('photo', file);
-        formData.append('brand', currentBrand);
+        const fd = new FormData();
+        fd.append('photo', file);
+        fd.append('brand', currentBrand);
 
-        fetch('/analyze', { method: 'POST', body: formData })
+        fetch('/analyze', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);
@@ -724,34 +817,32 @@
         let filled = 0;
 
         signals.forEach(sig => {
-            const aiKey = sig.ai_key;
             const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
             const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
-            if (!fieldEl || features[aiKey] === undefined) return;
+            if (!fieldEl || features[sig.ai_key] === undefined) return;
 
             let value;
             if (sig.type === 'bool') {
-                value = features[aiKey] ? '1' : '0';
+                value = features[sig.ai_key] ? '1' : '0';
             } else {
-                value = features[aiKey] || sig.options[0][0];
+                value = features[sig.ai_key] || sig.options[0][0];
             }
 
             fieldEl.value = value;
+            fieldEl.classList.add('ai-filled');
 
-            const isKnown = sig.type === 'bool' ? features[aiKey] : (value !== 'unknown' && value !== sig.options[0][0]);
-            fieldEl.classList.toggle('ai-filled', true);
-            if (badgeEl) badgeEl.classList.toggle('visible', isKnown);
-            if (isKnown) filled++;
+            const known = sig.type === 'bool'
+                ? features[sig.ai_key]
+                : (value !== 'unknown' && value !== sig.options[0][0]);
+
+            if (badgeEl) badgeEl.classList.toggle('visible', !!known);
+            if (known) filled++;
         });
 
         document.getElementById('previewCount').textContent =
             filled + ' signal' + (filled === 1 ? '' : 's') + ' detected';
-        document.getElementById('aiSourceBadge').classList.add('visible');
+        document.getElementById('aiDetectedNote').classList.add('visible');
     }
-
-    // Update version pill on load to match selected brand
-    document.getElementById('versionPill').textContent =
-        BRAND_LABELS[currentBrand].short + ' · v1.2';
 
     {% if result %}
     window.addEventListener('load', () => {
