@@ -34,29 +34,36 @@
         /* ── Header ── */
         header {
             position: fixed; top: 0; left: 0; right: 0;
-            height: 52px;
+            height: 56px;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 2rem;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px) saturate(1.4);
+            -webkit-backdrop-filter: blur(14px) saturate(1.4);
             border-bottom: 1px solid var(--border-light);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04);
             z-index: 100;
         }
 
         .logo { display: flex; align-items: center; gap: 10px; }
 
         .logo-mark {
-            width: 22px; height: 22px;
-            background: var(--yellow);
-            border-radius: 50%;
+            width: 28px; height: 28px;
             flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.18));
+        }
+
+        .logo-mark img {
+            width: 28px; height: 28px;
+            object-fit: contain;
+            display: block;
         }
 
         .logo-wordmark {
             font-family: 'Space Mono', monospace;
             font-size: 11px; font-weight: 700;
-            letter-spacing: 0.14em; text-transform: uppercase;
+            letter-spacing: 0.18em; text-transform: uppercase;
             color: var(--text);
         }
 
@@ -80,7 +87,7 @@
 
         /* ── Hero ── */
         .hero {
-            padding: 118px 2rem 64px;
+            padding: 122px 2rem 64px;
             max-width: 720px;
             margin: 0 auto;
         }
@@ -486,7 +493,7 @@
         /* ── Mobile ── */
         @media (max-width: 640px) {
             header { padding: 0 1.25rem; }
-            .hero { padding: 96px 1.25rem 48px; }
+            .hero { padding: 100px 1.25rem 48px; }
             .tool { padding: 28px 1.25rem 8rem; }
             .section-rule { padding: 0 1.25rem; }
             footer { padding: 1.5rem 1.25rem; }
@@ -517,7 +524,9 @@
 
 <header>
     <div class="logo">
-        <div class="logo-mark"></div>
+        <div class="logo-mark">
+            <img src="/static/Rogue_Globe.gif" alt="Rogue Globe">
+        </div>
         <span class="logo-wordmark">RPM</span>
         <div class="logo-divider"></div>
         <span class="logo-sub">Rogue Pricing Model</span>
