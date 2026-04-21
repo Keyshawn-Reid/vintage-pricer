@@ -1,1 +1,7 @@
 .env
+.claude/
+data/feedback/
+data/processed/
+__pycache__/
+*.pyc
+temp_analyze.jpg

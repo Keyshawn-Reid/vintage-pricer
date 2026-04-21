@@ -1,6 +1,7 @@
+import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 from sklearn.metrics import mean_absolute_error
 import sys
 import os
@@ -12,22 +13,38 @@ df = pd.read_csv("data/raw/harley_features.csv")
 
 X = df.drop("sold_price", axis=1)
 y = df["sold_price"]
+y_log = np.log1p(y)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# 5-fold CV — more reliable than a single train/test split at this dataset size
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+fold_maes = []
 
+for train_idx, val_idx in kf.split(X):
+    X_tr, X_val = X.iloc[train_idx], X.iloc[val_idx]
+    y_tr, y_val = y_log.iloc[train_idx], y.iloc[val_idx]
+
+    m = XGBRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
+    m.fit(X_tr, y_tr)
+    preds = np.expm1(m.predict(X_val))
+    fold_maes.append(mean_absolute_error(y_val, preds))
+
+cv_mae      = np.mean(fold_maes)
+baseline_mae = mean_absolute_error(y, np.full(len(y), y.median()))
+print(f"CV MAE:       ${cv_mae:.2f}  (avg over 5 folds)")
+print(f"Baseline MAE: ${baseline_mae:.2f}  (median predictor)")
+print(f"Gap:          ${baseline_mae - cv_mae:.2f}")
+
+# Train final model on all data for serving
 model = XGBRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
-model.fit(X_train, y_train)
-
-mae = mean_absolute_error(y_test, model.predict(X_test))
-print(f"Model trained. MAE: ${round(mae, 2)}")
+model.fit(X, y_log)
 
 def predict_price(title):
     features = extract_features(title)
     input_df = pd.DataFrame([features])
-    prediction = model.predict(input_df)[0]
-    low = round(prediction * 0.85, 2)
+    prediction = np.expm1(model.predict(input_df)[0])
+    low  = round(prediction * 0.85, 2)
     high = round(prediction * 1.15, 2)
-    return round(low, 2), round(high, 2)
+    return low, high
 
 def predict_price_from_features(features):
     input_data = {
@@ -46,7 +63,7 @@ def predict_price_from_features(features):
         "has_year": 0
     }
     input_df = pd.DataFrame([input_data])
-    prediction = model.predict(input_df)[0]
+    prediction = np.expm1(model.predict(input_df)[0])
     return round(float(prediction * 0.85), 2), round(float(prediction * 1.15), 2)
 
 if __name__ == "__main__":

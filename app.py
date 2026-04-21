@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split
@@ -9,6 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from src.vision import extract_features_from_image
 from src.brands import BRANDS
+from src.feedback import compute_image_ref, save_feedback
 
 app = Flask(__name__)
 
@@ -22,10 +24,9 @@ for _brand_id, _cfg in BRANDS.items():
         continue
     _df = pd.read_csv(_csv)
     _X = _df.drop("sold_price", axis=1)
-    _y = _df["sold_price"]
-    _X_train, _X_test, _y_train, _y_test = train_test_split(_X, _y, test_size=0.2, random_state=42)
+    _y = np.log1p(_df["sold_price"])
     _m = XGBRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
-    _m.fit(_X_train, _y_train)
+    _m.fit(_X, _y)
     _models[_brand_id] = {"model": _m, "columns": list(_X.columns)}
     print(f"[{_brand_id}] model trained on {len(_df)} rows")
 
@@ -50,6 +51,7 @@ def form_to_input_df(brand, data):
             "has_location": int(data.get("location", "0") == "1"),
             "is_event_tee": int(data.get("event", "0") == "1"),
             "has_year": 0,
+            "condition": int(data.get("condition", "3")),
         }
 
     elif brand == "ed_hardy":
@@ -98,7 +100,7 @@ def form_to_input_df(brand, data):
 def predict_for_brand(brand, input_df):
     if brand not in _models:
         return None, None
-    pred = _models[brand]["model"].predict(input_df)[0]
+    pred = np.expm1(_models[brand]["model"].predict(input_df)[0])
     return round(float(pred * 0.85), 2), round(float(pred * 1.15), 2)
 
 
@@ -121,6 +123,15 @@ def index():
                 error = f"No model trained for {BRANDS[selected_brand]['label']} yet — add a features CSV to enable pricing."
             else:
                 result = f"${low:.2f} – ${high:.2f}"
+
+            # Save feedback when a photo was used (image_ref present means /analyze ran)
+            image_ref = request.form.get("image_ref", "").strip()
+            if image_ref:
+                signals = BRANDS[selected_brand]["signals"]
+                ai_values   = {s["id"]: request.form.get(f"ai_{s['id']}", "") for s in signals}
+                user_values = {s["id"]: request.form.get(s["id"], "")           for s in signals}
+                save_feedback(selected_brand, image_ref, ai_values, user_values)
+
         except Exception as e:
             error = str(e)
 
@@ -151,6 +162,7 @@ def analyze():
     photo.save(path)
     try:
         features = extract_features_from_image(path, brand=brand)
+        features["image_ref"] = compute_image_ref(path)
         return jsonify(features)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

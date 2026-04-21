@@ -588,6 +588,7 @@
 
             <form method="POST" id="priceForm">
                 <input type="hidden" name="mode" value="manual">
+                <input type="hidden" name="image_ref" id="imageRef" value="">
 
                 <!-- Brand field — master select, drives which panel shows -->
                 <div class="brand-field-wrap">
@@ -778,6 +779,9 @@
         const signals = BRANDS_CONFIG[currentBrand].signals;
         let filled = 0;
 
+        // Store image ref for feedback
+        document.getElementById('imageRef').value = features.image_ref || '';
+
         signals.forEach(sig => {
             const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
             const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
@@ -792,6 +796,17 @@
 
             fieldEl.value = value;
             fieldEl.classList.add('ai-filled');
+
+            // Store AI prediction in hidden input so backend can compare against user's final value
+            let hiddenEl = document.getElementById('ai_' + sig.id);
+            if (!hiddenEl) {
+                hiddenEl = document.createElement('input');
+                hiddenEl.type = 'hidden';
+                hiddenEl.id   = 'ai_' + sig.id;
+                hiddenEl.name = 'ai_' + sig.id;
+                document.getElementById('priceForm').appendChild(hiddenEl);
+            }
+            hiddenEl.value = value;
 
             const known = sig.type === 'bool'
                 ? features[sig.ai_key]

@@ -8,3 +8,5 @@ requests
 beautifulsoup4
 openai
 Pillow
+selenium
+webdriver-manager
