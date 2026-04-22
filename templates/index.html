@@ -865,7 +865,7 @@
 
     let currentBrand = "{{ selected_brand }}";
 
-    const HELPER_TEXT = 'Upload a front image to detect brand and features.​Tag and back images improve accuracy for designer items.';
+    const HELPER_TEXT = 'Upload a front image to detect brand and features.<br>Tag and back images improve accuracy for designer items.';
 
     function setStatus(text, isError) {
         const el = document.getElementById('multiStatus');
@@ -1091,7 +1091,7 @@
             })
             .catch(() => {
                 setSlotProcessing('front', false);
-                setStatus('Couldn't detect brand — select manually above.', true);
+                setStatus("Couldn't detect brand — select manually above.", true);
             });
     }
 
