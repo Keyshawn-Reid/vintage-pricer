@@ -3,6 +3,7 @@ BRANDS = {
         "label": "Harley Davidson",
         "short": "HD",
         "csv": "data/raw/harley_features.csv",
+        "multi_image": True,
         "signals": [
             {
                 "id": "era", "label": "Era", "type": "select", "ai_key": "era",
@@ -54,6 +55,7 @@ Rules:
         "label": "Ed Hardy",
         "short": "EH",
         "csv": "data/raw/ed_hardy_features.csv",
+        "multi_image": True,
         "signals": [
             {
                 "id": "era", "label": "Era", "type": "select", "ai_key": "era",

@@ -657,45 +657,15 @@
         <h1 class="hero-headline">
             Know what<br>it's <span class="hl">worth.</span>
         </h1>
-        <p class="hero-sub">Upload a photo — AI reads the signals and prices it. Harley Davidson, Ed Hardy, Hysteric Glamour.</p>
+        <p class="hero-sub">Upload up to 4 photos — front, tag, back, care label — AI reads the signals and prices it.</p>
     </section>
 
     <div class="section-rule"></div>
 
     <section class="tool">
 
-        <!-- Upload zone -->
-        <div class="upload-zone" id="uploadZone"
-             onclick="handleZoneClick()"
-             ondragover="handleDragOver(event)"
-             ondragleave="handleDragLeave(event)"
-             ondrop="handleDrop(event)">
-
-            <div class="upload-state" id="stateDefault">
-                <div class="upload-icon-wrap">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                </div>
-                <p class="upload-label">Drop a photo here</p>
-                <p class="upload-hint">Tag · Front · Back<br>Brand and signals auto-detected</p>
-            </div>
-
-            <div class="upload-state upload-preview" id="statePreview" hidden>
-                <img class="preview-thumb" id="previewThumb" alt="">
-                <div class="preview-info">
-                    <p class="preview-status">Photo analyzed</p>
-                    <p class="preview-count" id="previewCount"></p>
-                </div>
-                <button type="button" class="preview-change" onclick="changePhoto(event)">Change</button>
-            </div>
-        </div>
-
-        <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(this)">
-
-        <!-- Multi-image upload (Hysteric only) -->
-        <div id="multiUploadZone" hidden>
+        <!-- Multi-image upload -->
+        <div id="multiUploadZone">
             <div class="multi-upload-zone">
                 <div class="upload-slot" id="slot-front" onclick="slotClick('front')">
                     <div class="slot-default">
@@ -867,85 +837,8 @@
         document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
         document.getElementById('aiDetectedNote').classList.remove('visible');
 
-        const isMulti = brandId === 'hysteric';
-        document.getElementById('uploadZone').hidden = isMulti;
-        document.getElementById('multiUploadZone').hidden = !isMulti;
-
-        if (!isMulti) resetMultiSlots();
-        else setState('default');  // reset single-image state
-
+        resetMultiSlots();
         currentBrand = brandId;
-    }
-
-    // ── Single-image upload (Harley / Ed Hardy) ─────────────────────────────
-    function setState(name) {
-        document.getElementById('stateDefault').hidden = name !== 'default';
-        document.getElementById('statePreview').hidden = name !== 'preview';
-        document.getElementById('uploadZone').style.cursor = name === 'preview' ? 'default' : 'pointer';
-    }
-
-    function handleZoneClick() {
-        if (!document.getElementById('statePreview').hidden) return;
-        document.getElementById('photoInput').click();
-    }
-
-    function changePhoto(e) {
-        e.stopPropagation();
-        document.getElementById('photoInput').click();
-    }
-
-    function handleDragOver(e) {
-        e.preventDefault();
-        document.getElementById('uploadZone').classList.add('dragover');
-    }
-
-    function handleDragLeave() {
-        document.getElementById('uploadZone').classList.remove('dragover');
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        document.getElementById('uploadZone').classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) processFile(file);
-    }
-
-    function handlePhotoChange(input) {
-        if (input.files && input.files[0]) processFile(input.files[0]);
-    }
-
-    function processFile(file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById('previewThumb').src = e.target.result;
-            document.getElementById('previewCount').textContent = 'Analyzing...';
-            setState('preview');
-        };
-        reader.readAsDataURL(file);
-
-        document.getElementById('submitBtn').disabled = true;
-
-        const fd = new FormData();
-        fd.append('photo', file);
-        fd.append('brand', currentBrand);
-
-        fetch('/analyze', { method: 'POST', body: fd })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                if (data.detected_brand && data.detected_brand !== currentBrand) {
-                    document.getElementById('brandSelect').value = data.detected_brand;
-                    handleBrandChange(data.detected_brand);
-                }
-                fillForm(data);
-            })
-            .catch(err => {
-                setState('default');
-                alert('Could not analyze photo: ' + err.message);
-            })
-            .finally(() => {
-                document.getElementById('submitBtn').disabled = false;
-            });
     }
 
     // ── Multi-image upload (Hysteric) ────────────────────────────────────────
@@ -1089,12 +982,6 @@
             if (known) filled++;
         });
 
-        // Single-image: update preview count
-        const previewCount = document.getElementById('previewCount');
-        if (previewCount) {
-            previewCount.textContent = filled + ' feature' + (filled === 1 ? '' : 's') + ' detected';
-        }
-
         document.getElementById('aiDetectedNote').classList.add('visible');
 
         if (features.detected_brand) {
@@ -1106,12 +993,6 @@
     // ── Init ─────────────────────────────────────────────────────────────────
     document.getElementById('headerBrand').textContent =
         BRAND_META[currentBrand].short + ' · v1.2';
-
-    // Show correct upload zone on load
-    if (currentBrand === 'hysteric') {
-        document.getElementById('uploadZone').hidden = true;
-        document.getElementById('multiUploadZone').hidden = false;
-    }
 
     {% if result %}
     window.addEventListener('load', () => {
