@@ -1005,21 +1005,21 @@
         const file = input.files[0];
         slotFiles[slotId] = file;
 
-        document.getElementById(‘multiStatus’).classList.remove(‘is-error’);
+        document.getElementById('multiStatus').classList.remove('is-error');
 
         const reader = new FileReader();
         reader.onload = e => {
-            const slot = document.getElementById(‘slot-’ + slotId);
-            slot.classList.add(‘has-image’);
+            const slot = document.getElementById('slot-' + slotId);
+            slot.classList.add('has-image');
             slot.innerHTML = `
                 <img class="slot-thumb" src="${e.target.result}" alt="${slotId}">
                 <div class="slot-label-bar">
                     <span class="slot-label-text">${slotId.toUpperCase()}</span>
-                    <button type="button" class="slot-clear" onclick="clearSlot(‘${slotId}’, event)">✕</button>
+                    <button type="button" class="slot-clear" onclick="clearSlot('${slotId}', event)">✕</button>
                 </div>`;
             // Stage 1: front triggers brand detection only.
             // Tag/back/care are silently staged — full analysis runs at submit time.
-            if (slotId === ‘front’) runDetect();
+            if (slotId === 'front') runDetect();
             else updateReadyStatus();
         };
         reader.readAsDataURL(file);
@@ -1028,19 +1028,19 @@
     function clearSlot(slotId, e) {
         e.stopPropagation();
         slotFiles[slotId] = null;
-        const slot = document.getElementById(‘slot-’ + slotId);
-        slot.classList.remove(‘has-image’);
+        const slot = document.getElementById('slot-' + slotId);
+        slot.classList.remove('has-image');
         slot.innerHTML = slotDefaultHTML(slotId);
-        document.getElementById(‘input-’ + slotId).value = ‘’;
+        document.getElementById('input-' + slotId).value = '';
 
-        if (slotId === ‘front’) {
+        if (slotId === 'front') {
             stopStagedStatus();
             _isAnalyzing = false;
-            activateBrand(‘auto’);
+            activateBrand('auto');
             lockForm();
-            document.querySelectorAll(‘.ai-badge’).forEach(b => b.classList.remove(‘visible’));
-            document.querySelectorAll(‘select’).forEach(s => s.classList.remove(‘ai-filled’));
-            document.getElementById(‘aiDetectedNote’).classList.remove(‘visible’);
+            document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
+            document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
+            document.getElementById('aiDetectedNote').classList.remove('visible');
         } else {
             updateReadyStatus();
         }
@@ -1051,13 +1051,13 @@
         _isAnalyzing = false;
         Object.keys(slotFiles).forEach(s => {
             slotFiles[s] = null;
-            const slot = document.getElementById(‘slot-’ + s);
+            const slot = document.getElementById('slot-' + s);
             if (slot) {
-                slot.classList.remove(‘has-image’);
+                slot.classList.remove('has-image');
                 slot.innerHTML = slotDefaultHTML(s);
             }
-            const inp = document.getElementById(‘input-’ + s);
-            if (inp) inp.value = ‘’;
+            const inp = document.getElementById('input-' + s);
+            if (inp) inp.value = '';
         });
         setStatus(HELPER_TEXT);
     }
@@ -1065,52 +1065,52 @@
     function updateReadyStatus() {
         if (!slotFiles.front) return;
         const count = Object.values(slotFiles).filter(Boolean).length;
-        setStatus(count + ‘ image’ + (count === 1 ? ‘’ : ‘s’) + ‘ ready · Click “Get Price” to analyze’);
+        setStatus(count + ' image' + (count === 1 ? '' : 's') + ' ready · Click "Get Price" to analyze');
     }
 
     // ── Stage 1: fast brand detection (front image only) ─────────────────────
     function runDetect() {
         if (!slotFiles.front) return;
 
-        setStatus(‘Detecting brand...’);
-        setSlotProcessing(‘front’, true);
+        setStatus('Detecting brand...');
+        setSlotProcessing('front', true);
 
         const fd = new FormData();
-        fd.append(‘front’, slotFiles.front);
+        fd.append('front', slotFiles.front);
 
-        fetch(‘/detect’, { method: ‘POST’, body: fd })
+        fetch('/detect', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);
                 activateBrand(data.detected_brand);
-                document.getElementById(‘badge-brand’).classList.add(‘visible’);
-                document.getElementById(‘brandSelect’).classList.add(‘ai-filled’);
+                document.getElementById('badge-brand').classList.add('visible');
+                document.getElementById('brandSelect').classList.add('ai-filled');
                 unlockForm();
-                setSlotDone(‘front’);
+                setSlotDone('front');
                 updateReadyStatus();
             })
             .catch(() => {
-                setSlotProcessing(‘front’, false);
-                setStatus(‘Couldn’t detect brand — select manually above.’, true);
+                setSlotProcessing('front', false);
+                setStatus('Couldn't detect brand — select manually above.', true);
             });
     }
 
     // ── Stage 2: full feature extraction (all images, runs at submit time) ────
     function runFullAnalyze(onSuccess) {
         _isAnalyzing = true;
-        document.getElementById(‘submitBtn’).disabled = true;
-        document.getElementById(‘multiStatus’).classList.remove(‘is-error’);
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('multiStatus').classList.remove('is-error');
 
         Object.keys(slotFiles).forEach(s => setSlotProcessing(s, true));
-        runStagedStatus([‘Reading features...’, ‘Estimating price...’], 1800);
+        runStagedStatus(['Reading features...', 'Estimating price...'], 1800);
 
         const fd = new FormData();
         Object.entries(slotFiles).forEach(([slot, file]) => {
             if (file) fd.append(slot, file);
         });
-        fd.append(‘brand’, currentBrand);
+        fd.append('brand', currentBrand);
 
-        fetch(‘/analyze’, { method: ‘POST’, body: fd })
+        fetch('/analyze', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(data => {
                 stopStagedStatus();
@@ -1122,8 +1122,8 @@
             .catch(err => {
                 stopStagedStatus();
                 Object.keys(slotFiles).forEach(s => setSlotProcessing(s, false));
-                setStatus(‘Analysis failed: ‘ + err.message, true);
-                document.getElementById(‘submitBtn’).disabled = false;
+                setStatus('Analysis failed: ' + err.message, true);
+                document.getElementById('submitBtn').disabled = false;
             })
             .finally(() => { _isAnalyzing = false; });
     }
