@@ -8,7 +8,8 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from src.vision import extract_features_from_image
+from src.vision import extract_features_from_image, extract_features_from_images
+from src.hysteric_rules import predict_price as hysteric_rules_predict
 from src.brands import BRANDS
 from src.feedback import compute_image_ref, save_feedback
 
@@ -71,37 +72,65 @@ def form_to_input_df(brand, data):
 
     elif brand == "hysteric":
         graphic = data.get("graphic_type", "unknown")
+        collab_tier = data.get("collab_tier", "none")
+        try:
+            condition = max(1, min(5, int(data.get("condition", 3) or 3)))
+        except (ValueError, TypeError):
+            condition = 3
+
         row = {
-            "is_80s": int(era == "80s"),
-            "is_90s": int(era == "90s"),
-            "is_y2k": int(era == "y2k"),
-            "size_s": int(size == "S"),
-            "size_m": int(size == "M"),
-            "size_l": int(size == "L"),
-            "size_xl": int(size == "XL"),
-            "graphic_devil": int(graphic == "devil"),
-            "graphic_pin_up": int(graphic == "pin_up"),
-            "graphic_logo": int(graphic == "logo"),
-            "is_japan_market": int(data.get("japan_market", "0") == "1"),
-            "is_collab": int(data.get("collab", "0") == "1"),
-            "is_vtg": 1,
+            # Era
+            "is_80s":    int(era == "80s"),
+            "is_90s":    int(era == "90s"),
+            "is_y2k":    int(era == "y2k"),
+            "is_current": int(era == "current"),
+            # Size
+            "size_s":   int(size == "S"),
+            "size_m":   int(size == "M"),
+            "size_l":   int(size == "L"),
+            "size_xl":  int(size == "XL"),
+            "size_2xl": int(size == "2XL"),
+            # Graphic
+            "graphic_snake":      int(graphic == "snake"),
+            "graphic_skull":      int(graphic == "skull"),
+            "graphic_devil_babe": int(graphic == "devil_babe"),
+            "graphic_pin_up":     int(graphic == "pin_up"),
+            "graphic_marilyn":    int(graphic == "marilyn"),
+            "graphic_cross":      int(graphic == "cross"),
+            "graphic_logo_only":  int(graphic == "logo_only"),
+            "graphic_other":      int(graphic == "other"),
+            # Collab
+            "is_supreme_collab": int(collab_tier == "supreme"),
+            "is_guess_collab":   int(collab_tier == "guess"),
+            "is_other_collab":   int(collab_tier == "other"),
+            # Tag / authenticity
+            "is_japan_domestic": int(data.get("is_japan_domestic", "0") == "1"),
+            "is_reprint":        int(data.get("is_reprint", "0") == "1"),
+            # Physical
+            "has_back_graphic":  int(data.get("has_back_graphic", "0") == "1"),
+            "has_single_stitch": int(data.get("has_single_stitch", "0") == "1"),
+            # Condition
+            "condition": condition,
         }
 
     else:
         raise ValueError(f"Unknown brand: {brand}")
 
     input_df = pd.DataFrame([row])
-    # Align columns to training schema in case of any mismatch
-    if brand in _models:
+    # Align columns to XGBoost training schema — skip for brands using rules-based pricing
+    if brand in _models and brand != "hysteric":
         input_df = input_df.reindex(columns=_models[brand]["columns"], fill_value=0)
     return input_df
 
 
 def predict_for_brand(brand, input_df):
-    if brand not in _models:
-        return None, None
-    pred = np.expm1(_models[brand]["model"].predict(input_df)[0])
-    return round(float(pred * 0.85), 2), round(float(pred * 1.15), 2)
+    # Hysteric uses rules-based pricing until new training data is scraped
+    if brand == "hysteric":
+        return hysteric_rules_predict(input_df.iloc[0].to_dict())
+    if brand in _models:
+        pred = np.expm1(_models[brand]["model"].predict(input_df)[0])
+        return round(float(pred * 0.85), 2), round(float(pred * 1.15), 2)
+    return None, None
 
 
 def retail_price(ebay_midpoint: float) -> float:
@@ -172,21 +201,43 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    photo = request.files.get("photo")
-    if not photo:
-        return jsonify({"error": "No photo provided"}), 400
     brand = request.form.get("brand", "harley")
-    path = "temp_analyze.jpg"
-    photo.save(path)
-    try:
-        features = extract_features_from_image(path, brand=brand)
-        features["image_ref"] = compute_image_ref(path)
-        return jsonify(features)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if os.path.exists(path):
-            os.remove(path)
+
+    if BRANDS.get(brand, {}).get("multi_image"):
+        temp_paths = {}
+        try:
+            for slot in ("front", "tag", "back", "care"):
+                f = request.files.get(slot)
+                if f:
+                    path = f"temp_{slot}.jpg"
+                    f.save(path)
+                    temp_paths[slot] = path
+            if "front" not in temp_paths:
+                return jsonify({"error": "Front image is required"}), 400
+            features = extract_features_from_images(temp_paths, brand=brand)
+            features["image_ref"] = compute_image_ref(temp_paths["front"])
+            return jsonify(features)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            for p in temp_paths.values():
+                if os.path.exists(p):
+                    os.remove(p)
+    else:
+        photo = request.files.get("photo")
+        if not photo:
+            return jsonify({"error": "No photo provided"}), 400
+        path = "temp_analyze.jpg"
+        photo.save(path)
+        try:
+            features = extract_features_from_image(path, brand=brand)
+            features["image_ref"] = compute_image_ref(path)
+            return jsonify(features)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
 
 
 if __name__ == "__main__":

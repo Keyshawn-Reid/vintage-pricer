@@ -522,6 +522,90 @@
             background: var(--yellow); border-radius: 50%;
         }
 
+        /* ── Multi-image upload slots ── */
+        .multi-upload-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .upload-slot {
+            background: #fff;
+            border: 1.5px dashed var(--border);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .upload-slot:hover { border-color: var(--text); background: var(--yellow-dim); }
+
+        .upload-slot.has-image {
+            border-style: solid;
+            border-color: var(--border-light);
+            cursor: pointer;
+        }
+
+        .slot-default { text-align: center; padding: 1.25rem 1rem; pointer-events: none; }
+
+        .slot-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text); margin-bottom: 4px;
+        }
+
+        .slot-desc {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px; letter-spacing: 0.04em;
+            text-transform: uppercase; color: var(--text-muted); line-height: 1.6;
+        }
+
+        .slot-req {
+            font-family: 'Space Mono', monospace;
+            font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--yellow-dark); margin-top: 6px;
+        }
+
+        .slot-thumb { width: 100%; height: 120px; object-fit: cover; display: block; }
+
+        .slot-label-bar {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.62);
+            padding: 4px 8px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .slot-label-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
+        }
+
+        .slot-clear {
+            background: none; border: none;
+            color: rgba(255,255,255,0.7); cursor: pointer;
+            font-size: 10px; padding: 0; line-height: 1;
+        }
+
+        .slot-clear:hover { color: #fff; }
+
+        .multi-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0 0;
+        }
+
+        .multi-status {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--text-muted);
+        }
+
         /* ── Mobile ── */
         @media (max-width: 640px) {
             header { padding: 0 1.25rem; }
@@ -610,6 +694,45 @@
 
         <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(this)">
 
+        <!-- Multi-image upload (Hysteric only) -->
+        <div id="multiUploadZone" hidden>
+            <div class="multi-upload-zone">
+                <div class="upload-slot" id="slot-front" onclick="slotClick('front')">
+                    <div class="slot-default">
+                        <p class="slot-name">Front</p>
+                        <p class="slot-desc">Main graphic side</p>
+                        <p class="slot-req">Required</p>
+                    </div>
+                </div>
+                <div class="upload-slot" id="slot-tag" onclick="slotClick('tag')">
+                    <div class="slot-default">
+                        <p class="slot-name">Tag</p>
+                        <p class="slot-desc">Collar / neck tag</p>
+                        <p class="slot-req">Recommended</p>
+                    </div>
+                </div>
+                <div class="upload-slot" id="slot-back" onclick="slotClick('back')">
+                    <div class="slot-default">
+                        <p class="slot-name">Back</p>
+                        <p class="slot-desc">Back graphic / print</p>
+                    </div>
+                </div>
+                <div class="upload-slot" id="slot-care" onclick="slotClick('care')">
+                    <div class="slot-default">
+                        <p class="slot-name">Care Label</p>
+                        <p class="slot-desc">Wash / care tag</p>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="input-front" accept="image/*" onchange="handleSlotChange('front', this)">
+            <input type="file" id="input-tag"   accept="image/*" onchange="handleSlotChange('tag', this)">
+            <input type="file" id="input-back"  accept="image/*" onchange="handleSlotChange('back', this)">
+            <input type="file" id="input-care"  accept="image/*" onchange="handleSlotChange('care', this)">
+            <div class="multi-footer">
+                <span class="multi-status" id="multiStatus">Upload front photo to analyze</span>
+            </div>
+        </div>
+
         <!-- Features block -->
         <div class="features-wrap">
 
@@ -688,7 +811,9 @@
         <div class="result-section">
             <p class="result-eyebrow">{{ brands[selected_brand].label }} · eBay Market Range</p>
             <p class="result-price">{{ result }}</p>
-            <p class="result-meta">± 15% confidence interval · XGBoost model</p>
+            <p class="result-meta">± 15% confidence interval ·
+                {% if selected_brand == 'hysteric' %}Rules-based model{% else %}XGBoost model{% endif %}
+            </p>
 
             {% if retail %}
             <div class="retail-block">
@@ -724,6 +849,7 @@
 
     let currentBrand = "{{ selected_brand }}";
 
+    // ── Brand switching ─────────────────────────────────────────────────────
     function handleBrandChange(brandId) {
         if (brandId === currentBrand) return;
 
@@ -737,14 +863,21 @@
         panel.querySelectorAll('select').forEach(s => s.disabled = false);
 
         document.getElementById('headerBrand').textContent = BRAND_META[brandId].short + ' · v1.2';
-
         document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
         document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
         document.getElementById('aiDetectedNote').classList.remove('visible');
 
+        const isMulti = brandId === 'hysteric';
+        document.getElementById('uploadZone').hidden = isMulti;
+        document.getElementById('multiUploadZone').hidden = !isMulti;
+
+        if (!isMulti) resetMultiSlots();
+        else setState('default');  // reset single-image state
+
         currentBrand = brandId;
     }
 
+    // ── Single-image upload (Harley / Ed Hardy) ─────────────────────────────
     function setState(name) {
         document.getElementById('stateDefault').hidden = name !== 'default';
         document.getElementById('statePreview').hidden = name !== 'preview';
@@ -782,7 +915,6 @@
     }
 
     function processFile(file) {
-        // Show thumbnail immediately — no spinner
         const reader = new FileReader();
         reader.onload = e => {
             document.getElementById('previewThumb').src = e.target.result;
@@ -816,11 +948,111 @@
             });
     }
 
+    // ── Multi-image upload (Hysteric) ────────────────────────────────────────
+    const slotFiles = { front: null, tag: null, back: null, care: null };
+
+    const SLOT_CONFIGS = {
+        front: { name: 'Front',       desc: 'Main graphic side', req: 'Required' },
+        tag:   { name: 'Tag',         desc: 'Collar / neck tag', req: 'Recommended' },
+        back:  { name: 'Back',        desc: 'Back graphic / print', req: null },
+        care:  { name: 'Care Label',  desc: 'Wash / care tag',  req: null },
+    };
+
+    function slotDefaultHTML(slotId) {
+        const cfg = SLOT_CONFIGS[slotId];
+        const reqLine = cfg.req
+            ? `<p class="slot-req">${cfg.req}</p>`
+            : '';
+        return `<div class="slot-default">
+            <p class="slot-name">${cfg.name}</p>
+            <p class="slot-desc">${cfg.desc}</p>
+            ${reqLine}
+        </div>`;
+    }
+
+    function slotClick(slotId) {
+        document.getElementById('input-' + slotId).click();
+    }
+
+    function handleSlotChange(slotId, input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        slotFiles[slotId] = file;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            const slot = document.getElementById('slot-' + slotId);
+            slot.classList.add('has-image');
+            slot.innerHTML = `
+                <img class="slot-thumb" src="${e.target.result}" alt="${slotId}">
+                <div class="slot-label-bar">
+                    <span class="slot-label-text">${slotId.toUpperCase()}</span>
+                    <button type="button" class="slot-clear" onclick="clearSlot('${slotId}', event)">✕</button>
+                </div>`;
+        };
+        reader.readAsDataURL(file);
+
+        if (slotFiles.front) runMultiAnalyze();
+    }
+
+    function clearSlot(slotId, e) {
+        e.stopPropagation();
+        slotFiles[slotId] = null;
+        const slot = document.getElementById('slot-' + slotId);
+        slot.classList.remove('has-image');
+        slot.innerHTML = slotDefaultHTML(slotId);
+        document.getElementById('input-' + slotId).value = '';
+    }
+
+    function resetMultiSlots() {
+        Object.keys(slotFiles).forEach(s => {
+            slotFiles[s] = null;
+            const slot = document.getElementById('slot-' + s);
+            if (slot) {
+                slot.classList.remove('has-image');
+                slot.innerHTML = slotDefaultHTML(s);
+            }
+            const inp = document.getElementById('input-' + s);
+            if (inp) inp.value = '';
+        });
+        const statusEl = document.getElementById('multiStatus');
+        if (statusEl) statusEl.textContent = 'Upload front photo to analyze';
+    }
+
+    function runMultiAnalyze() {
+        if (!slotFiles.front) return;
+
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('multiStatus').textContent = 'Analyzing...';
+
+        const fd = new FormData();
+        Object.entries(slotFiles).forEach(([slot, file]) => {
+            if (file) fd.append(slot, file);
+        });
+        fd.append('brand', 'hysteric');
+
+        fetch('/analyze', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                fillForm(data);
+                const count = Object.values(slotFiles).filter(Boolean).length;
+                document.getElementById('multiStatus').textContent =
+                    count + ' image' + (count === 1 ? '' : 's') + ' analyzed';
+            })
+            .catch(err => {
+                document.getElementById('multiStatus').textContent = 'Analysis failed: ' + err.message;
+            })
+            .finally(() => {
+                document.getElementById('submitBtn').disabled = false;
+            });
+    }
+
+    // ── Fill form from AI response ───────────────────────────────────────────
     function fillForm(features) {
         const signals = BRANDS_CONFIG[currentBrand].signals;
         let filled = 0;
 
-        // Store image ref for feedback
         document.getElementById('imageRef').value = features.image_ref || '';
 
         signals.forEach(sig => {
@@ -832,13 +1064,13 @@
             if (sig.type === 'bool') {
                 value = features[sig.ai_key] ? '1' : '0';
             } else {
-                value = features[sig.ai_key] || sig.options[0][0];
+                value = String(features[sig.ai_key] ?? sig.options[0][0]);
+                if (!value || value === 'null' || value === 'undefined') value = sig.options[0][0];
             }
 
             fieldEl.value = value;
             fieldEl.classList.add('ai-filled');
 
-            // Store AI prediction in hidden input so backend can compare against user's final value
             let hiddenEl = document.getElementById('ai_' + sig.id);
             if (!hiddenEl) {
                 hiddenEl = document.createElement('input');
@@ -857,20 +1089,29 @@
             if (known) filled++;
         });
 
-        document.getElementById('previewCount').textContent =
-            filled + ' feature' + (filled === 1 ? '' : 's') + ' detected';
+        // Single-image: update preview count
+        const previewCount = document.getElementById('previewCount');
+        if (previewCount) {
+            previewCount.textContent = filled + ' feature' + (filled === 1 ? '' : 's') + ' detected';
+        }
+
         document.getElementById('aiDetectedNote').classList.add('visible');
 
-        // Show AI badge on brand field if brand was detected
         if (features.detected_brand) {
             document.getElementById('badge-brand').classList.add('visible');
             document.getElementById('brandSelect').classList.add('ai-filled');
         }
     }
 
-    // Init header brand label
+    // ── Init ─────────────────────────────────────────────────────────────────
     document.getElementById('headerBrand').textContent =
         BRAND_META[currentBrand].short + ' · v1.2';
+
+    // Show correct upload zone on load
+    if (currentBrand === 'hysteric') {
+        document.getElementById('uploadZone').hidden = true;
+        document.getElementById('multiUploadZone').hidden = false;
+    }
 
     {% if result %}
     window.addEventListener('load', () => {

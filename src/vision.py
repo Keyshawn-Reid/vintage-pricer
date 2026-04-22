@@ -26,6 +26,14 @@ def _compress_image(image_path):
         img.save(buf, format="JPEG", quality=JPEG_QUALITY)
         return buf.getvalue()
 
+_SLOT_LABELS = {
+    "front": "FRONT — main graphic side of the garment",
+    "tag":   "TAG — collar or neck tag (use for era, brand line, Japan domestic, collab text, tag generation)",
+    "back":  "BACK — back of the garment (check for back graphic)",
+    "care":  "CARE LABEL — wash/care label (country of origin, fiber content, possible year codes)",
+}
+
+
 def extract_features_from_image(image_path, brand="harley"):
     image_data = base64.b64encode(_compress_image(image_path)).decode("utf-8")
     prompt = BRANDS[brand]["vision_prompt"]
@@ -46,6 +54,36 @@ def extract_features_from_image(image_path, brand="harley"):
 
     result = response.choices[0].message.content
     result = result.strip().replace("```json", "").replace("```", "").strip()
+    return json.loads(result)
+
+
+def extract_features_from_images(image_paths: dict, brand: str = "hysteric") -> dict:
+    """Multi-image extraction. image_paths = {slot: path} where slot is front/tag/back/care."""
+    prompt = BRANDS[brand]["vision_prompt"]
+
+    role_lines = [
+        f"Image {i + 1} is the {_SLOT_LABELS[slot]}."
+        for i, slot in enumerate(image_paths)
+        if slot in _SLOT_LABELS
+    ]
+    role_preamble = "\n".join(role_lines)
+
+    content = [{"type": "text", "text": f"{role_preamble}\n\n{prompt}"}]
+    for path in image_paths.values():
+        image_data = base64.b64encode(_compress_image(path)).decode("utf-8")
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
+        })
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": content}],
+        max_tokens=400,
+    )
+
+    result = response.choices[0].message.content.strip()
+    result = result.replace("```json", "").replace("```", "").strip()
     return json.loads(result)
 
 
