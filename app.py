@@ -201,48 +201,53 @@ def index():
     )
 
 
+@app.route("/detect", methods=["POST"])
+def detect():
+    """Stage 1 — fast brand identification from front image only."""
+    front = request.files.get("front")
+    if not front:
+        return jsonify({"error": "Front image required"}), 400
+    path = "temp_detect.jpg"
+    front.save(path)
+    try:
+        brand = detect_brand({"front": path})
+        return jsonify({"detected_brand": brand})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    brand = request.form.get("brand", "harley")
+    """Stage 2 — full feature extraction using all uploaded images.
+    Brand must already be known (resolved by /detect or manual selection).
+    Called by the form submit interceptor with the complete current image set.
+    """
+    brand = request.form.get("brand", "")
+    if brand not in BRANDS:
+        return jsonify({"error": f"Unknown brand '{brand}' — select a brand first."}), 400
 
-    if brand == "auto" or BRANDS.get(brand, {}).get("multi_image"):
-        temp_paths = {}
-        try:
-            for slot in ("front", "tag", "back", "care"):
-                f = request.files.get(slot)
-                if f:
-                    path = f"temp_{slot}.jpg"
-                    f.save(path)
-                    temp_paths[slot] = path
-            if "front" not in temp_paths:
-                return jsonify({"error": "Front image is required"}), 400
-            if brand == "auto":
-                brand = detect_brand(temp_paths)
-            features = extract_features_from_images(temp_paths, brand=brand)
-            features["detected_brand"] = brand
-            features["image_ref"] = compute_image_ref(temp_paths["front"])
-            return jsonify(features)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-        finally:
-            for p in temp_paths.values():
-                if os.path.exists(p):
-                    os.remove(p)
-    else:
-        photo = request.files.get("photo")
-        if not photo:
-            return jsonify({"error": "No photo provided"}), 400
-        path = "temp_analyze.jpg"
-        photo.save(path)
-        try:
-            features = extract_features_from_image(path, brand=brand)
-            features["image_ref"] = compute_image_ref(path)
-            return jsonify(features)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
+    temp_paths = {}
+    try:
+        for slot in ("front", "tag", "back", "care"):
+            f = request.files.get(slot)
+            if f:
+                path = f"temp_{slot}.jpg"
+                f.save(path)
+                temp_paths[slot] = path
+        if "front" not in temp_paths:
+            return jsonify({"error": "Front image is required"}), 400
+        features = extract_features_from_images(temp_paths, brand=brand)
+        features["image_ref"] = compute_image_ref(temp_paths["front"])
+        return jsonify(features)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        for p in temp_paths.values():
+            if os.path.exists(p):
+                os.remove(p)
 
 
 if __name__ == "__main__":
