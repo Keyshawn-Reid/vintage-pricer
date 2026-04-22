@@ -251,6 +251,16 @@
 
         /* ── Features block — white block on dot grid ── */
         .features-wrap {
+            transition: opacity 0.35s ease;
+        }
+
+        .features-wrap.locked {
+            opacity: 0.32;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .features-wrap {
             margin-top: 16px;
             background: #fff;
             border: 1px solid var(--border-light);
@@ -704,7 +714,7 @@
         </div>
 
         <!-- Features block -->
-        <div class="features-wrap">
+        <div class="features-wrap {% if not result and not form_data %}locked{% endif %}" id="featuresWrap">
 
             <div class="features-header">
                 <span class="features-label">Features</span>
@@ -722,6 +732,7 @@
                         <span class="ai-badge" id="badge-brand">AI</span>
                     </div>
                     <select name="brand" id="brandSelect" onchange="handleBrandChange(this.value)">
+                        <option value="auto" {% if selected_brand == 'auto' %}selected{% endif %}>Auto-detect after upload</option>
                         {% for brand_id, brand_cfg in brands.items() %}
                         <option value="{{ brand_id }}" {% if brand_id == selected_brand %}selected{% endif %}>
                             {{ brand_cfg.label }}
@@ -819,26 +830,51 @@
 
     let currentBrand = "{{ selected_brand }}";
 
-    // ── Brand switching ─────────────────────────────────────────────────────
-    function handleBrandChange(brandId) {
-        if (brandId === currentBrand) return;
+    // ── Lock / unlock features form ─────────────────────────────────────────
+    function lockForm() {
+        document.getElementById('featuresWrap').classList.add('locked');
+        document.getElementById('submitBtn').disabled = true;
+    }
 
+    function unlockForm() {
+        document.getElementById('featuresWrap').classList.remove('locked');
+        document.getElementById('submitBtn').disabled = false;
+    }
+
+    // ── Activate a brand panel (no slot reset, no badge clear) ───────────────
+    function activateBrand(brandId) {
         document.querySelectorAll('.signals-panel').forEach(p => {
             p.classList.remove('active');
             p.querySelectorAll('select').forEach(s => s.disabled = true);
         });
+        if (brandId && brandId !== 'auto') {
+            const panel = document.getElementById('panel-' + brandId);
+            if (panel) {
+                panel.classList.add('active');
+                panel.querySelectorAll('select').forEach(s => s.disabled = false);
+            }
+            document.getElementById('brandSelect').value = brandId;
+            document.getElementById('headerBrand').textContent = BRAND_META[brandId]?.short + ' · v1.2';
+        } else {
+            document.getElementById('brandSelect').value = 'auto';
+            document.getElementById('headerBrand').textContent = 'v1.2';
+        }
+        currentBrand = brandId || 'auto';
+    }
 
-        const panel = document.getElementById('panel-' + brandId);
-        panel.classList.add('active');
-        panel.querySelectorAll('select').forEach(s => s.disabled = false);
+    // ── Brand switching (user-initiated) ────────────────────────────────────
+    function handleBrandChange(brandId) {
+        if (brandId === currentBrand) return;
 
-        document.getElementById('headerBrand').textContent = BRAND_META[brandId].short + ' · v1.2';
         document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
         document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
         document.getElementById('aiDetectedNote').classList.remove('visible');
 
+        activateBrand(brandId);
         resetMultiSlots();
-        currentBrand = brandId;
+
+        if (brandId === 'auto') lockForm();
+        else unlockForm();
     }
 
     // ── Multi-image upload (Hysteric) ────────────────────────────────────────
@@ -922,7 +958,7 @@
         Object.entries(slotFiles).forEach(([slot, file]) => {
             if (file) fd.append(slot, file);
         });
-        fd.append('brand', 'hysteric');
+        fd.append('brand', currentBrand);
 
         fetch('/analyze', { method: 'POST', body: fd })
             .then(r => r.json())
@@ -937,14 +973,23 @@
                 document.getElementById('multiStatus').textContent = 'Analysis failed: ' + err.message;
             })
             .finally(() => {
-                document.getElementById('submitBtn').disabled = false;
+                if (document.getElementById('featuresWrap').classList.contains('locked')) {
+                    document.getElementById('submitBtn').disabled = true;
+                }
             });
     }
 
     // ── Fill form from AI response ───────────────────────────────────────────
     function fillForm(features) {
-        const signals = BRANDS_CONFIG[currentBrand].signals;
-        let filled = 0;
+        // Switch to detected brand if needed
+        if (features.detected_brand && features.detected_brand !== currentBrand) {
+            activateBrand(features.detected_brand);
+            document.getElementById('badge-brand').classList.add('visible');
+            document.getElementById('brandSelect').classList.add('ai-filled');
+        }
+
+        const signals = BRANDS_CONFIG[currentBrand]?.signals;
+        if (!signals) return;
 
         document.getElementById('imageRef').value = features.image_ref || '';
 
@@ -979,20 +1024,20 @@
                 : (value !== 'unknown' && value !== sig.options[0][0]);
 
             if (badgeEl) badgeEl.classList.toggle('visible', !!known);
-            if (known) filled++;
         });
 
         document.getElementById('aiDetectedNote').classList.add('visible');
-
-        if (features.detected_brand) {
-            document.getElementById('badge-brand').classList.add('visible');
-            document.getElementById('brandSelect').classList.add('ai-filled');
-        }
+        unlockForm();
     }
 
     // ── Init ─────────────────────────────────────────────────────────────────
-    document.getElementById('headerBrand').textContent =
-        BRAND_META[currentBrand].short + ' · v1.2';
+    if (currentBrand !== 'auto' && BRAND_META[currentBrand]) {
+        document.getElementById('headerBrand').textContent = BRAND_META[currentBrand].short + ' · v1.2';
+    }
+    // Start submit disabled if form is locked (no photo analyzed yet)
+    if (document.getElementById('featuresWrap').classList.contains('locked')) {
+        document.getElementById('submitBtn').disabled = true;
+    }
 
     {% if result %}
     window.addEventListener('load', () => {

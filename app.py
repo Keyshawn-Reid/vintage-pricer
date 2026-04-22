@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from src.vision import extract_features_from_image, extract_features_from_images
+from src.vision import extract_features_from_image, extract_features_from_images, detect_brand
 from src.hysteric_rules import predict_price as hysteric_rules_predict
 from src.brands import BRANDS
 from src.feedback import compute_image_ref, save_feedback
@@ -155,13 +155,15 @@ def index():
     retail = None
     form_data = {}
     error = None
-    selected_brand = "harley"
+    selected_brand = "auto"
 
     if request.method == "POST":
         selected_brand = request.form.get("brand", "harley")
         form_data = request.form
 
         try:
+            if selected_brand not in BRANDS:
+                raise ValueError("Select a brand or upload a photo to auto-detect.")
             input_df = form_to_input_df(selected_brand, form_data)
             low, high = predict_for_brand(selected_brand, input_df)
             if low is None:
@@ -203,7 +205,7 @@ def index():
 def analyze():
     brand = request.form.get("brand", "harley")
 
-    if BRANDS.get(brand, {}).get("multi_image"):
+    if brand == "auto" or BRANDS.get(brand, {}).get("multi_image"):
         temp_paths = {}
         try:
             for slot in ("front", "tag", "back", "care"):
@@ -214,7 +216,10 @@ def analyze():
                     temp_paths[slot] = path
             if "front" not in temp_paths:
                 return jsonify({"error": "Front image is required"}), 400
+            if brand == "auto":
+                brand = detect_brand(temp_paths)
             features = extract_features_from_images(temp_paths, brand=brand)
+            features["detected_brand"] = brand
             features["image_ref"] = compute_image_ref(temp_paths["front"])
             return jsonify(features)
         except Exception as e:

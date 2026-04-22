@@ -26,6 +26,14 @@ def _compress_image(image_path):
         img.save(buf, format="JPEG", quality=JPEG_QUALITY)
         return buf.getvalue()
 
+_DETECT_PROMPT = (
+    'Identify the vintage clothing brand. Return ONLY valid JSON: '
+    '{"detected_brand": "harley or ed_hardy or hysteric or unknown"}\n'
+    'harley = Harley Davidson (eagle/shield/HOG/motorcycle graphics)\n'
+    'ed_hardy = Ed Hardy (Don Ed Hardy tattoo art, rhinestones, Christian Audigier)\n'
+    'hysteric = Hysteric Glamour (Japanese streetwear, devil babe, pin-up, snake, Japanese tags)'
+)
+
 _SLOT_LABELS = {
     "front": "FRONT — main graphic side of the garment",
     "tag":   "TAG — collar or neck tag (use for era, brand line, Japan domestic, collab text, tag generation)",
@@ -85,6 +93,26 @@ def extract_features_from_images(image_paths: dict, brand: str = "hysteric") -> 
     result = response.choices[0].message.content.strip()
     result = result.replace("```json", "").replace("```", "").strip()
     return json.loads(result)
+
+
+def detect_brand(image_paths: dict) -> str:
+    """Single fast call using only the front image to identify brand."""
+    path = image_paths.get("front") or next(iter(image_paths.values()), None)
+    if not path:
+        return "harley"
+    image_data = base64.b64encode(_compress_image(path)).decode("utf-8")
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": [
+            {"type": "text", "text": _DETECT_PROMPT},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
+        ]}],
+        max_tokens=50,
+    )
+    result = response.choices[0].message.content.strip().replace("```json", "").replace("```", "").strip()
+    detected = json.loads(result).get("detected_brand", "unknown")
+    from src.brands import BRANDS
+    return detected if detected in BRANDS else "harley"
 
 
 if __name__ == "__main__":
