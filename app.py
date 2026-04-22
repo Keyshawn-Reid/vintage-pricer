@@ -104,10 +104,26 @@ def predict_for_brand(brand, input_df):
     return round(float(pred * 0.85), 2), round(float(pred * 1.15), 2)
 
 
+def retail_price(ebay_midpoint: float) -> float:
+    """Tiered multiplier: eBay market value → Rogue retail tag price."""
+    if ebay_midpoint <= 35:
+        multiplier = 1.95
+    elif ebay_midpoint <= 80:
+        multiplier = 1.70
+    elif ebay_midpoint <= 150:
+        multiplier = 1.45
+    else:
+        multiplier = 1.30
+    # Round to nearest $5 — cleaner price tags
+    raw = ebay_midpoint * multiplier
+    return round(raw / 5) * 5
+
+
 # ── Routes ───────────────────────────────────────────────────────────────────
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+    retail = None
     form_data = {}
     error = None
     selected_brand = "harley"
@@ -123,6 +139,7 @@ def index():
                 error = f"No model trained for {BRANDS[selected_brand]['label']} yet — add a features CSV to enable pricing."
             else:
                 result = f"${low:.2f} – ${high:.2f}"
+                retail = retail_price((low + high) / 2)
 
             # Save feedback when a photo was used (image_ref present means /analyze ran)
             image_ref = request.form.get("image_ref", "").strip()
@@ -143,6 +160,7 @@ def index():
     return render_template(
         "index.html",
         result=result,
+        retail=retail,
         form_data=form_data,
         error=error,
         selected_brand=selected_brand,

@@ -462,6 +462,38 @@
             background: var(--border-light); margin-top: 40px;
         }
 
+        /* ── Retail block ── */
+        .retail-block {
+            margin-top: 32px;
+            padding: 20px 24px;
+            background: var(--yellow);
+            display: inline-block;
+            min-width: 220px;
+        }
+
+        .retail-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text); opacity: 0.6;
+            margin-bottom: 6px;
+        }
+
+        .retail-price {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 900; line-height: 1.0;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+
+        .retail-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; color: var(--text);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            opacity: 0.5; margin-top: 6px;
+        }
+
         /* Error */
         .error-msg {
             margin-top: 24px;
@@ -654,9 +686,18 @@
         <!-- Result -->
         {% if result %}
         <div class="result-section">
-            <p class="result-eyebrow">{{ brands[selected_brand].label }} · Estimated Range</p>
+            <p class="result-eyebrow">{{ brands[selected_brand].label }} · eBay Market Range</p>
             <p class="result-price">{{ result }}</p>
             <p class="result-meta">± 15% confidence interval · XGBoost model</p>
+
+            {% if retail %}
+            <div class="retail-block">
+                <p class="retail-eyebrow">Rogue Retail</p>
+                <p class="retail-price">${{ retail }}</p>
+                <p class="retail-meta">Tiered store multiplier · Nearest $5</p>
+            </div>
+            {% endif %}
+
             <div class="result-divider"></div>
         </div>
         {% endif %}
