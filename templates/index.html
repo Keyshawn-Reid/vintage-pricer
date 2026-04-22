@@ -251,13 +251,12 @@
 
         /* ── Features block — white block on dot grid ── */
         .features-wrap {
-            transition: opacity 0.35s ease;
+            transition: opacity 0.45s ease;
         }
 
         .features-wrap.locked {
-            opacity: 0.32;
-            pointer-events: none;
-            user-select: none;
+            opacity: 0.28;
+            /* signal selects are already disabled via HTML — no pointer-events block needed */
         }
 
         .features-wrap {
@@ -614,7 +613,43 @@
             font-family: 'Space Mono', monospace;
             font-size: 9px; letter-spacing: 0.08em;
             text-transform: uppercase; color: var(--text-muted);
+            line-height: 1.75;
+            transition: color 0.2s;
         }
+
+        .multi-status.is-error { color: #c44; }
+
+        /* ── Slot processing / done overlays ── */
+        .slot-processing {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.68);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-muted);
+            animation: rpm-pulse 1.4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rpm-pulse {
+            0%, 100% { opacity: 0.45; }
+            50%       { opacity: 1; }
+        }
+
+        .slot-check {
+            position: absolute; top: 6px; right: 6px;
+            width: 18px; height: 18px;
+            background: var(--yellow);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700; color: var(--text);
+            transition: opacity 0.45s ease;
+            pointer-events: none;
+        }
+
+        .slot-check.fading { opacity: 0; }
+
+        /* Submit button enables/disables with opacity fade */
+        .submit-btn { transition: background 0.15s, opacity 0.25s ease; }
 
         /* ── Mobile ── */
         @media (max-width: 640px) {
@@ -709,7 +744,7 @@
             <input type="file" id="input-back"  accept="image/*" onchange="handleSlotChange('back', this)">
             <input type="file" id="input-care"  accept="image/*" onchange="handleSlotChange('care', this)">
             <div class="multi-footer">
-                <span class="multi-status" id="multiStatus">Upload front photo to analyze</span>
+                <span class="multi-status" id="multiStatus">Upload a front image to detect brand and features.<br>Tag and back images improve accuracy for designer items.</span>
             </div>
         </div>
 
@@ -830,15 +865,75 @@
 
     let currentBrand = "{{ selected_brand }}";
 
+    const HELPER_TEXT = 'Upload a front image to detect brand and features.​Tag and back images improve accuracy for designer items.';
+
+    function setStatus(text, isError) {
+        const el = document.getElementById('multiStatus');
+        if (!el) return;
+        el.innerHTML = text;
+        el.classList.toggle('is-error', !!isError);
+    }
+
     // ── Lock / unlock features form ─────────────────────────────────────────
     function lockForm() {
         document.getElementById('featuresWrap').classList.add('locked');
         document.getElementById('submitBtn').disabled = true;
+        setStatus(HELPER_TEXT);
     }
 
     function unlockForm() {
         document.getElementById('featuresWrap').classList.remove('locked');
         document.getElementById('submitBtn').disabled = false;
+    }
+
+    // ── Staged loading status ────────────────────────────────────────────────
+    let _stagingActive = false;
+    let _stagingTimers = [];
+
+    function runStagedStatus(stages, perStageMs) {
+        _stagingTimers.forEach(clearTimeout);
+        _stagingTimers = [];
+        _stagingActive = true;
+        stages.forEach((text, i) => {
+            _stagingTimers.push(setTimeout(() => {
+                if (_stagingActive) setStatus(text);
+            }, i * perStageMs));
+        });
+    }
+
+    function stopStagedStatus() {
+        _stagingActive = false;
+        _stagingTimers.forEach(clearTimeout);
+        _stagingTimers = [];
+    }
+
+    // ── Slot processing / done overlays ─────────────────────────────────────
+    function setSlotProcessing(slotId, on) {
+        const slot = document.getElementById('slot-' + slotId);
+        if (!slot || !slot.classList.contains('has-image')) return;
+        const existing = slot.querySelector('.slot-processing');
+        if (on && !existing) {
+            const el = document.createElement('div');
+            el.className = 'slot-processing';
+            el.textContent = 'Processing';
+            slot.appendChild(el);
+        } else if (!on && existing) {
+            existing.remove();
+        }
+    }
+
+    function setSlotDone(slotId) {
+        const slot = document.getElementById('slot-' + slotId);
+        if (!slot || !slot.classList.contains('has-image')) return;
+        slot.querySelector('.slot-processing')?.remove();
+        if (!slot.querySelector('.slot-check')) {
+            const el = document.createElement('div');
+            el.className = 'slot-check';
+            el.textContent = '✓';
+            slot.appendChild(el);
+            setTimeout(() => el.classList.add('fading'), 1800);
+            setTimeout(() => el.remove(), 2300);
+        }
     }
 
     // ── Activate a brand panel (no slot reset, no badge clear) ───────────────
@@ -903,10 +998,15 @@
         document.getElementById('input-' + slotId).click();
     }
 
+    let _isAnalyzing = false;
+
     function handleSlotChange(slotId, input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         slotFiles[slotId] = file;
+
+        // Clear any existing error state
+        document.getElementById('multiStatus').classList.remove('is-error');
 
         const reader = new FileReader();
         reader.onload = e => {
@@ -918,10 +1018,9 @@
                     <span class="slot-label-text">${slotId.toUpperCase()}</span>
                     <button type="button" class="slot-clear" onclick="clearSlot('${slotId}', event)">✕</button>
                 </div>`;
+            if (slotFiles.front) runMultiAnalyze();
         };
         reader.readAsDataURL(file);
-
-        if (slotFiles.front) runMultiAnalyze();
     }
 
     function clearSlot(slotId, e) {
@@ -931,9 +1030,19 @@
         slot.classList.remove('has-image');
         slot.innerHTML = slotDefaultHTML(slotId);
         document.getElementById('input-' + slotId).value = '';
+
+        if (slotId === 'front' && !slotFiles.front) {
+            stopStagedStatus();
+            activateBrand('auto');
+            lockForm();
+            document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
+            document.querySelectorAll('select').forEach(s => s.classList.remove('ai-filled'));
+            document.getElementById('aiDetectedNote').classList.remove('visible');
+        }
     }
 
     function resetMultiSlots() {
+        stopStagedStatus();
         Object.keys(slotFiles).forEach(s => {
             slotFiles[s] = null;
             const slot = document.getElementById('slot-' + s);
@@ -944,15 +1053,21 @@
             const inp = document.getElementById('input-' + s);
             if (inp) inp.value = '';
         });
-        const statusEl = document.getElementById('multiStatus');
-        if (statusEl) statusEl.textContent = 'Upload front photo to analyze';
+        setStatus(HELPER_TEXT);
     }
 
     function runMultiAnalyze() {
-        if (!slotFiles.front) return;
+        if (!slotFiles.front || _isAnalyzing) return;
+        _isAnalyzing = true;
 
         document.getElementById('submitBtn').disabled = true;
-        document.getElementById('multiStatus').textContent = 'Analyzing...';
+        document.getElementById('multiStatus').classList.remove('is-error');
+
+        // Processing overlays on filled slots
+        Object.keys(slotFiles).forEach(s => setSlotProcessing(s, true));
+
+        // Staged status — 1800ms per stage
+        runStagedStatus(['Detecting brand...', 'Reading features...', 'Estimating price...'], 1800);
 
         const fd = new FormData();
         Object.entries(slotFiles).forEach(([slot, file]) => {
@@ -963,16 +1078,27 @@
         fetch('/analyze', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(data => {
+                stopStagedStatus();
                 if (data.error) throw new Error(data.error);
                 fillForm(data);
+                // Done indicators on each slot that has an image
+                Object.keys(slotFiles).forEach(s => { if (slotFiles[s]) setSlotDone(s); });
                 const count = Object.values(slotFiles).filter(Boolean).length;
-                document.getElementById('multiStatus').textContent =
-                    count + ' image' + (count === 1 ? '' : 's') + ' analyzed';
+                setStatus(count + ' image' + (count === 1 ? '' : 's') + ' analyzed');
             })
             .catch(err => {
-                document.getElementById('multiStatus').textContent = 'Analysis failed: ' + err.message;
+                stopStagedStatus();
+                Object.keys(slotFiles).forEach(s => setSlotProcessing(s, false));
+                const isDetectFailure = currentBrand === 'auto' || !err.message;
+                setStatus(
+                    isDetectFailure
+                        ? 'Couldn’t detect brand — select manually above.'
+                        : 'Analysis failed: ' + err.message,
+                    true
+                );
             })
             .finally(() => {
+                _isAnalyzing = false;
                 if (document.getElementById('featuresWrap').classList.contains('locked')) {
                     document.getElementById('submitBtn').disabled = true;
                 }
