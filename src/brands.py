@@ -43,6 +43,7 @@ Analyze this image and extract the following signals. Return ONLY valid JSON, no
     "is_event_tee": true or false
 }
 Rules:
+- Always return all 6 fields. Use "unknown" for era/size you cannot determine; use false for features not clearly visible.
 - 3D emblem = Harley shield is raised/embossed, not flat-printed
 - Single stitch = single row sleeve hem stitching (vintage pre-1996 indicator)
 - Location name = specific city, state, or dealership on the shirt
