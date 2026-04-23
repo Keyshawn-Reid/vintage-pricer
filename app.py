@@ -164,6 +164,32 @@ def normalize_features(raw: dict, brand: str) -> dict:
     return normalized
 
 
+# ── Post-extraction validation rules ─────────────────────────────────────────
+# Run after normalize_features, before features reach the frontend or pricing.
+# Each rule: "if" fires on the feature dict, "then" corrects specific keys,
+# "note" is logged when a correction is made. Add dicts to extend per brand.
+BRAND_RULES: dict[str, list[dict]] = {
+    "harley": [
+        {
+            "if":   lambda f: f.get("era") in ("y2k", "current"),
+            "then": {"has_3d_emblem": False},
+            "note": "3D emblem impossible on Y2K/later era",
+        },
+    ],
+}
+
+
+def apply_rules(features: dict, brand: str) -> dict:
+    corrected = dict(features)
+    for rule in BRAND_RULES.get(brand, []):
+        if rule["if"](corrected):
+            for key, val in rule["then"].items():
+                if corrected.get(key) != val:
+                    print(f"[RPM rules] {rule['note']} — {key}: {corrected[key]!r} → {val!r}", flush=True)
+                    corrected[key] = val
+    return corrected
+
+
 def retail_price(ebay_midpoint: float) -> float:
     """Tiered multiplier: eBay market value → Rogue retail tag price."""
     if ebay_midpoint <= 35:
@@ -273,6 +299,7 @@ def analyze():
         raw = extract_features_from_images(temp_paths, brand=brand)
         print(f"[RPM /analyze] brand={brand} images={list(temp_paths.keys())} raw={json.dumps(raw)}", flush=True)
         features = normalize_features(raw, brand)
+        features = apply_rules(features, brand)
         features["image_ref"] = compute_image_ref(temp_paths["front"])
         return jsonify(features)
     except Exception as e:
