@@ -1115,6 +1115,7 @@
             .then(data => {
                 stopStagedStatus();
                 if (data.error) throw new Error(data.error);
+                console.log('[RPM] /analyze raw response:', JSON.stringify(data));
                 fillForm(data);
                 Object.keys(slotFiles).forEach(s => { if (slotFiles[s]) setSlotDone(s); });
                 onSuccess && onSuccess();
@@ -1138,6 +1139,7 @@
         }
 
         const signals = BRANDS_CONFIG[currentBrand]?.signals;
+        console.log(`[RPM fillForm] brand=${currentBrand} signals=${signals?.length ?? 'NONE'}`);
         if (!signals) return;
 
         document.getElementById('imageRef').value = features.image_ref || '';
@@ -1145,17 +1147,28 @@
         signals.forEach(sig => {
             const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
             const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
-            if (!fieldEl || features[sig.ai_key] === undefined) return;
+            if (!fieldEl) {
+                console.warn(`[RPM fillForm] SKIP ${sig.id}: element field-${currentBrand}-${sig.id} not found in DOM`);
+                return;
+            }
+
+            // Treat missing/null from AI as a safe fallback — never leave stale values.
+            const rawVal = features[sig.ai_key]; // may be undefined if key absent from response
 
             let value;
             if (sig.type === 'bool') {
-                value = features[sig.ai_key] ? '1' : '0';
+                // undefined/null/false all map to '0'
+                value = rawVal ? '1' : '0';
             } else {
-                value = String(features[sig.ai_key] ?? sig.options[0][0]);
+                value = String(rawVal ?? sig.options[0][0]);
                 if (!value || value === 'null' || value === 'undefined') value = sig.options[0][0];
             }
 
+            const prevValue = fieldEl.value;
             fieldEl.value = value;
+            const actualValue = fieldEl.value;
+            const keyAbsent = rawVal === undefined;
+            console.log(`[RPM fillForm] ${sig.id}: raw=${JSON.stringify(rawVal)}${keyAbsent ? ' (KEY ABSENT — using fallback)' : ''} → wrote="${value}" prev="${prevValue}" actual="${actualValue}"${actualValue !== value ? ' ⚠️ VALUE MISMATCH — no matching <option>' : ''}`);
             fieldEl.classList.add('ai-filled');
 
             let hiddenEl = document.getElementById('ai_' + sig.id);
@@ -1187,7 +1200,12 @@
         e.preventDefault();
         runFullAnalyze(function() {
             // Small pause so ✓ indicators register before the page reloads
-            setTimeout(() => document.getElementById('priceForm').submit(), 200);
+            setTimeout(() => {
+                const _snap = {};
+                new FormData(document.getElementById('priceForm')).forEach((v, k) => _snap[k] = v);
+                console.log('[RPM] form submit snapshot:', JSON.stringify(_snap));
+                document.getElementById('priceForm').submit();
+            }, 200);
         });
     });
 

@@ -34,6 +34,7 @@ for _brand_id, _cfg in BRANDS.items():
 
 # ── Feature extraction: form → input DataFrame ──────────────────────────────
 def form_to_input_df(brand, data):
+    print(f"[RPM form_data] brand={brand} raw={dict(data)}", flush=True)
     era = data.get("era", "unknown")
     size = data.get("size", "unknown")
 
@@ -116,6 +117,7 @@ def form_to_input_df(brand, data):
     else:
         raise ValueError(f"Unknown brand: {brand}")
 
+    print(f"[RPM row] brand={brand} row={row}", flush=True)
     input_df = pd.DataFrame([row])
     # Align columns to XGBoost training schema — skip for brands using rules-based pricing
     if brand in _models and brand != "hysteric":
@@ -241,6 +243,7 @@ def analyze():
             return jsonify({"error": "Front image is required"}), 400
         features = extract_features_from_images(temp_paths, brand=brand)
         features["image_ref"] = compute_image_ref(temp_paths["front"])
+        print(f"[RPM /analyze] brand={brand} images={list(temp_paths.keys())} features={json.dumps({k: v for k, v in features.items() if k != 'image_ref'})}", flush=True)
         return jsonify(features)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
