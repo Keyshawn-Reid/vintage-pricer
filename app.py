@@ -135,6 +135,35 @@ def predict_for_brand(brand, input_df):
     return None, None
 
 
+def normalize_features(raw: dict, brand: str) -> dict:
+    """Normalize a raw GPT-4o response against the brand's signal schema.
+
+    Every expected ai_key is guaranteed to be present in the output.
+    Missing or null values get explicit type-safe defaults — bool → False,
+    select → first option value.  Unexpected keys from the AI are dropped.
+    """
+    signals = BRANDS[brand]["signals"]
+    expected_keys = {sig["ai_key"] for sig in signals}
+    normalized = {}
+    defaulted = []
+
+    for sig in signals:
+        key = sig["ai_key"]
+        val = raw.get(key)          # None for both absent keys and explicit null
+        if val is None:
+            val = False if sig["type"] == "bool" else sig["options"][0][0]
+            defaulted.append(key)
+        normalized[key] = val
+
+    unexpected = [k for k in raw if k not in expected_keys]
+    if unexpected:
+        print(f"[RPM normalize] brand={brand} unexpected keys (ignored): {unexpected}", flush=True)
+    if defaulted:
+        print(f"[RPM normalize] brand={brand} defaulted missing/null keys: {defaulted}", flush=True)
+
+    return normalized
+
+
 def retail_price(ebay_midpoint: float) -> float:
     """Tiered multiplier: eBay market value → Rogue retail tag price."""
     if ebay_midpoint <= 35:
@@ -241,9 +270,10 @@ def analyze():
                 temp_paths[slot] = path
         if "front" not in temp_paths:
             return jsonify({"error": "Front image is required"}), 400
-        features = extract_features_from_images(temp_paths, brand=brand)
+        raw = extract_features_from_images(temp_paths, brand=brand)
+        print(f"[RPM /analyze] brand={brand} images={list(temp_paths.keys())} raw={json.dumps(raw)}", flush=True)
+        features = normalize_features(raw, brand)
         features["image_ref"] = compute_image_ref(temp_paths["front"])
-        print(f"[RPM /analyze] brand={brand} images={list(temp_paths.keys())} features={json.dumps({k: v for k, v in features.items() if k != 'image_ref'})}", flush=True)
         return jsonify(features)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

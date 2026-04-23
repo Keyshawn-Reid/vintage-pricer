@@ -1144,6 +1144,18 @@
 
         document.getElementById('imageRef').value = features.image_ref || '';
 
+        // Reset every field in the active brand panel to its default before
+        // applying new values — no prior Jinja2-rendered value survives.
+        const _panel = document.getElementById('panel-' + currentBrand);
+        if (_panel) {
+            _panel.querySelectorAll('select').forEach(sel => {
+                sel.selectedIndex = 0;
+                sel.classList.remove('ai-filled');
+            });
+            _panel.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
+        }
+        console.log(`[RPM fillForm] reset panel-${currentBrand} to defaults`);
+
         signals.forEach(sig => {
             const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
             const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
