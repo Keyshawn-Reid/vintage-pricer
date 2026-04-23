@@ -230,11 +230,13 @@ def index():
                 # premium outliers; prevents underpricing genuine high-end 3D tees.
                 # Remove when a dedicated 3D emblem training set is available.
                 if selected_brand == "harley" and form_data.get("emblem") == "1":
-                    _EMBLEM_FLOOR = 65.0  # eBay midpoint floor — tune from comp data
-                    if (low + high) / 2 < _EMBLEM_FLOOR:
+                    _condition    = form_data.get("condition")
+                    _EMBLEM_FLOOR = 70.0 if _condition == "poor" else 90.0
+                    _orig_mid     = round((low + high) / 2, 2)
+                    if _orig_mid < _EMBLEM_FLOOR:
                         low  = round(_EMBLEM_FLOOR * 0.85, 2)
                         high = round(_EMBLEM_FLOOR * 1.15, 2)
-                        print(f"[RPM emblem-floor] midpoint below ${_EMBLEM_FLOOR:.0f} — floored to ${low:.2f}–${high:.2f}", flush=True)
+                        print(f"[RPM emblem-floor] condition={_condition!r} floor=${_EMBLEM_FLOOR:.0f} orig_mid=${_orig_mid:.2f} → ${low:.2f}–${high:.2f}", flush=True)
                 result = f"${low:.2f} – ${high:.2f}"
                 retail = retail_price((low + high) / 2)
 
