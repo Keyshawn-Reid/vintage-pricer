@@ -98,7 +98,10 @@
             font-size: 11px; font-weight: 700;
             letter-spacing: 0.18em; text-transform: uppercase;
             color: var(--text);
+            text-decoration: none;
         }
+
+        .logo-wordmark:hover { color: var(--text-muted); }
 
         .logo-divider {
             width: 1px; height: 14px;
@@ -175,12 +178,13 @@
         .hub-drawer {
             position: fixed;
             top: 0; right: 0; bottom: 0;
+            left: auto;
             width: 280px;
             background: #fff;
             border-left: 1px solid var(--border-light);
             box-shadow: -4px 0 32px rgba(0,0,0,0.1);
             z-index: 210;
-            transform: translateX(100%);
+            transform: translateX(280px);
             transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
@@ -338,6 +342,10 @@
         <button class="hub-close" onclick="closeHub()" aria-label="Close Hub">✕</button>
     </div>
     <div class="hub-nav">
+        <a href="/" class="hub-nav-item" onclick="closeHub()">
+            <span class="hub-nav-dot"></span>
+            Pricing Tool
+        </a>
         <a href="/sessions" class="hub-nav-item" onclick="closeHub()">
             <span class="hub-nav-dot"></span>
             Pricing Sessions
@@ -372,7 +380,7 @@
             <img src="/static/RogueGlobeV2.gif" alt="Rogue Globe">
             <span class="hub-trigger-label">Open Hub</span>
         </div>
-        <span class="logo-wordmark">RPM</span>
+        <a href="/" class="logo-wordmark">RPM</a>
         <div class="logo-divider"></div>
         <span class="logo-sub">Rogue Pricing Model</span>
     </div>
