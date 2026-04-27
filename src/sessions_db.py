@@ -103,6 +103,7 @@ def add_item(
     image_ref: str,
     suggested_low: float,
     suggested_high: float,
+    final_price: float = None,
 ) -> str:
     item_id = uuid.uuid4().hex[:8]
     now = datetime.now(timezone.utc).isoformat()
@@ -110,12 +111,12 @@ def add_item(
         conn.execute("""
             INSERT INTO session_items
                 (id, session_id, brand, title, category, features,
-                 image_ref, suggested_low, suggested_high, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+                 image_ref, suggested_low, suggested_high, final_price, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
         """, (
             item_id, session_id, brand, title, category,
             json.dumps(features), image_ref,
-            suggested_low, suggested_high, now
+            suggested_low, suggested_high, final_price, now
         ))
     return item_id
 

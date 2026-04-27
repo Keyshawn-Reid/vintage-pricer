@@ -460,6 +460,7 @@ def save_item():
         return redirect("/?save_error=1")
 
     title = make_item_title(brand, features)
+    rogue_retail = retail_price((low + high) / 2) if low or high else None
     add_item(
         session_id=session_id,
         brand=brand,
@@ -469,6 +470,7 @@ def save_item():
         image_ref=image_ref,
         suggested_low=low,
         suggested_high=high,
+        final_price=float(rogue_retail) if rogue_retail else None,
     )
     flask_session["active_session_id"] = session_id
     return redirect("/?saved=1")
