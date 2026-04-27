@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Sessions — RPM{% endblock %}
+
+{% block page_css %}
+        .page-wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 88px 2rem 6rem;
+        }
+
+        /* ── Page header ── */
+        .page-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .page-eyebrow::before {
+            content: '';
+            width: 8px; height: 8px;
+            background: var(--yellow);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .page-title-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .page-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 6vw, 56px);
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+
+        /* ── New Session button ── */
+        .new-session-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--text);
+            color: var(--yellow);
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            transition: background 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .new-session-btn:hover { background: hsl(64, 8%, 22%); }
+
+        /* ── Search bar ── */
+        .sessions-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: 1px solid var(--border-light);
+            border-radius: 0;
+            background: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.15s;
+            appearance: none;
+        }
+
+        .search-input::placeholder { color: var(--text-light); }
+        .search-input:focus { border-color: var(--text); }
+
+        .filter-select {
+            border: 1px solid var(--border-light);
+            background: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 10px 28px 10px 12px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23BCBCB8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            transition: border-color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .filter-select:focus { border-color: var(--text); }
+
+        /* ── Session cards ── */
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1px;
+            background: var(--border-light);
+            border: 1px solid var(--border-light);
+        }
+
+        .session-card {
+            background: #fff;
+            padding: 22px 24px;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            transition: background 0.12s;
+            position: relative;
+        }
+
+        .session-card:hover { background: var(--yellow-dim); }
+
+        .session-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .session-status-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 7px;
+            flex-shrink: 0;
+        }
+
+        .session-status-badge.active   { background: var(--yellow); color: var(--text); }
+        .session-status-badge.submitted { background: hsl(210, 70%, 48%); color: #fff; }
+        .session-status-badge.printed  { background: hsl(142, 52%, 42%); color: #fff; }
+
+        .session-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.15;
+        }
+
+        .session-meta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .session-meta-item {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .session-meta-dot {
+            width: 3px; height: 3px;
+            background: var(--border);
+            border-radius: 50%;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            padding: 64px 0;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            background: #fff;
+        }
+
+        .empty-icon {
+            width: 48px; height: 48px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 18px;
+        }
+
+        .empty-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .empty-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            line-height: 1.8;
+        }
+
+        /* ── No-results message ── */
+        .no-results {
+            display: none;
+            padding: 32px 24px;
+            text-align: center;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 640px) {
+            .page-wrap { padding: 80px 1.25rem 5rem; }
+            .sessions-grid { grid-template-columns: 1fr; }
+            .search-input { font-size: 16px; }
+        }
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <p class="page-eyebrow">Admin · Pricing Sessions</p>
+
+    <div class="page-title-row">
+        <h1 class="page-headline">Sessions</h1>
+        <form method="POST" action="/sessions/new" id="newSessionForm">
+            <input type="hidden" name="name" id="newSessionName" value="">
+            <button type="submit" class="new-session-btn">
+                + Start New Session
+            </button>
+        </form>
+    </div>
+
+    {% if sessions %}
+    <div class="sessions-toolbar">
+        <input
+            type="text"
+            class="search-input"
+            id="sessionSearch"
+            placeholder="Search sessions…"
+            autocomplete="off"
+            oninput="filterSessions()"
+        >
+        <select class="filter-select" id="statusFilter" onchange="filterSessions()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="submitted">Submitted</option>
+            <option value="printed">Printed</option>
+        </select>
+    </div>
+
+    <div class="sessions-grid" id="sessionsGrid">
+        {% for s in sessions %}
+        <a
+            href="/sessions/{{ s.id }}"
+            class="session-card"
+            data-name="{{ s.name | lower }}"
+            data-status="{{ s.status }}"
+        >
+            <div class="session-card-top">
+                <span class="session-name">{{ s.name }}</span>
+                <span class="session-status-badge {{ s.status }}">{{ s.status }}</span>
+            </div>
+            <div class="session-meta">
+                <span class="session-meta-item">
+                    {{ s.item_count }} item{{ 's' if s.item_count != 1 else '' }}
+                </span>
+                <span class="session-meta-dot"></span>
+                <span class="session-meta-item" data-iso="{{ s.created_at }}">
+                    {{ s.created_at[:10] }}
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="no-results" id="noResults">No sessions match your search.</div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">○</div>
+        <p class="empty-title">No sessions yet</p>
+        <p class="empty-sub">Start a new session to begin<br>pricing and tagging items.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format ISO dates to friendly local time
+    document.querySelectorAll('[data-iso]').forEach(el => {
+        const d = new Date(el.dataset.iso);
+        if (!isNaN(d)) {
+            el.textContent = d.toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+        }
+    });
+
+    function filterSessions() {
+        const query = document.getElementById('sessionSearch').value.toLowerCase().trim();
+        const status = document.getElementById('statusFilter').value;
+        const cards = document.querySelectorAll('.session-card');
+        let visible = 0;
+
+        cards.forEach(card => {
+            const nameMatch = !query || card.dataset.name.includes(query);
+            const statusMatch = !status || card.dataset.status === status;
+            const show = nameMatch && statusMatch;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        const noResults = document.getElementById('noResults');
+        if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

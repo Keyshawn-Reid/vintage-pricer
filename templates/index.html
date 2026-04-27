@@ -1,90 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>RPM — Rogue Pricing Model</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        [hidden] { display: none !important; }
+{% extends "base.html" %}
 
-        :root {
-            --yellow: hsl(56, 100%, 64%);
-            --yellow-dim: hsla(56, 100%, 64%, 0.10);
-            --yellow-dark: hsl(50, 90%, 48%);
-            --text: hsl(64, 8%, 14%);
-            --text-muted: hsl(64, 8%, 50%);
-            --text-light: hsl(64, 8%, 72%);
-            --border: hsl(64, 8%, 78%);
-            --border-light: hsl(64, 8%, 89%);
-            --surface: hsl(64, 8%, 97%);
-        }
+{% block title %}RPM — Rogue Pricing Model{% endblock %}
 
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            color: var(--text);
-            background-color: #fff;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><rect width='2' height='2' fill='%23E3E3DE'/></svg>");
-            background-size: 24px 24px;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ── Header ── */
-        header {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 56px;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 2rem;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(14px) saturate(1.4);
-            -webkit-backdrop-filter: blur(14px) saturate(1.4);
-            border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04);
-            z-index: 100;
-        }
-
-        .logo { display: flex; align-items: center; gap: 10px; }
-
-        .logo-mark {
-            width: 28px; height: 28px;
-            flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.18));
-        }
-
-        .logo-mark img {
-            width: 28px; height: 28px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .logo-wordmark {
-            font-family: 'Space Mono', monospace;
-            font-size: 11px; font-weight: 700;
-            letter-spacing: 0.18em; text-transform: uppercase;
-            color: var(--text);
-        }
-
-        .logo-divider {
-            width: 1px; height: 14px;
-            background: var(--border-light);
-            margin: 0 2px;
-        }
-
-        .logo-sub {
-            font-family: 'Space Mono', monospace;
-            font-size: 9px; color: var(--text-muted);
-            letter-spacing: 0.08em; text-transform: uppercase;
-        }
-
-        .header-right {
-            font-family: 'Space Mono', monospace;
-            font-size: 9px; color: var(--text-muted);
-            letter-spacing: 0.08em; text-transform: uppercase;
-        }
-
+{% block page_css %}
         /* ── Hero ── */
         .hero {
             padding: 122px 2rem 64px;
@@ -154,7 +72,7 @@
             padding: 40px 2rem 10rem;
         }
 
-        /* Upload zone — white block on dot grid */
+        /* Upload zone */
         .upload-zone {
             width: 100%;
             min-height: 220px;
@@ -249,14 +167,13 @@
 
         input[type="file"] { display: none; }
 
-        /* ── Features block — white block on dot grid ── */
+        /* Features block */
         .features-wrap {
             transition: opacity 0.45s ease;
         }
 
         .features-wrap.locked {
             opacity: 0.28;
-            /* signal selects are already disabled via HTML — no pointer-events block needed */
         }
 
         .features-wrap {
@@ -291,7 +208,6 @@
 
         .ai-detected-note.visible { display: inline; }
 
-        /* Brand field — above signal grid */
         .brand-field-wrap {
             padding: 18px 24px 20px;
             border-bottom: 1px solid var(--border-light);
@@ -335,7 +251,6 @@
 
         .ai-badge.visible { display: inline; }
 
-        /* Tooltip */
         .tooltip-wrap { position: relative; display: inline-flex; }
 
         .tooltip-btn {
@@ -377,7 +292,6 @@
         .tooltip-wrap:hover .tooltip-body,
         .tooltip-btn:focus ~ .tooltip-body { opacity: 1; }
 
-        /* Underline selects */
         select {
             width: 100%;
             border: none;
@@ -401,15 +315,9 @@
         select:hover:not(:focus) { border-bottom-color: var(--text-muted); }
         select.ai-filled { border-bottom-color: var(--yellow-dark); }
 
-        /* Brand select — slightly larger */
-        #brandSelect {
-            font-size: 15px; font-weight: 600;
-        }
+        #brandSelect { font-size: 15px; font-weight: 600; }
 
-        /* Submit */
-        .form-footer {
-            padding: 20px 24px;
-        }
+        .form-footer { padding: 20px 24px; }
 
         .submit-btn {
             width: 100%;
@@ -419,7 +327,7 @@
             font-family: 'Space Mono', monospace;
             font-size: 11px; font-weight: 700;
             letter-spacing: 0.14em; text-transform: uppercase;
-            transition: background 0.15s;
+            transition: background 0.15s, opacity 0.25s ease;
             min-height: 52px;
         }
 
@@ -503,6 +411,80 @@
             opacity: 0.5; margin-top: 6px;
         }
 
+        /* ── Save to Session panel ── */
+        .save-panel {
+            margin-top: 20px;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .save-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .save-panel-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .save-panel-form { padding: 14px 20px; }
+
+        .save-panel-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .save-panel-row select { flex: 1; }
+
+        .save-item-btn {
+            padding: 9px 18px;
+            background: var(--yellow);
+            color: var(--text);
+            border: none; cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            white-space: nowrap;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .save-item-btn:hover { background: var(--yellow-dark); color: #fff; }
+
+        .save-empty-hint {
+            margin-top: 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; color: var(--text-muted);
+            letter-spacing: 0.06em;
+        }
+
+        .save-empty-hint a { color: var(--text); text-decoration: underline; }
+
+        /* ── Saved toast ── */
+        .saved-toast {
+            position: fixed;
+            bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(0);
+            background: var(--text); color: var(--yellow);
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            padding: 10px 20px;
+            z-index: 500;
+            opacity: 1;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+        }
+
+        .saved-toast.fade-out {
+            opacity: 0;
+            transform: translateX(-50%) translateY(8px);
+        }
+
         /* Error */
         .error-msg {
             margin-top: 24px;
@@ -510,25 +492,6 @@
             border-left: 3px solid #e55;
             font-size: 13px; color: #c33;
             background: rgba(200,50,50,0.04);
-        }
-
-        /* ── Footer ── */
-        footer {
-            max-width: 720px; margin: 0 auto;
-            padding: 2rem;
-            border-top: 1px solid var(--border-light);
-            display: flex; align-items: center; justify-content: space-between;
-        }
-
-        .footer-left {
-            font-family: 'Space Mono', monospace;
-            font-size: 9px; color: var(--text-light);
-            letter-spacing: 0.08em; text-transform: uppercase;
-        }
-
-        .footer-mark {
-            width: 16px; height: 16px;
-            background: var(--yellow); border-radius: 50%;
         }
 
         /* ── Multi-image upload slots ── */
@@ -619,7 +582,6 @@
 
         .multi-status.is-error { color: #c44; }
 
-        /* ── Slot processing / done overlays ── */
         .slot-processing {
             position: absolute; inset: 0;
             background: rgba(255,255,255,0.68);
@@ -648,18 +610,11 @@
 
         .slot-check.fading { opacity: 0; }
 
-        /* Submit button enables/disables with opacity fade */
-        .submit-btn { transition: background 0.15s, opacity 0.25s ease; }
-
         /* ── Mobile ── */
         @media (max-width: 640px) {
-            header { padding: 0 1.25rem; }
             .hero { padding: 100px 1.25rem 48px; }
             .tool { padding: 28px 1.25rem 8rem; }
             .section-rule { padding: 0 1.25rem; }
-            footer { padding: 1.5rem 1.25rem; }
-            .logo-sub { display: none; }
-            .logo-divider { display: none; }
             .upload-zone { min-height: 160px; }
             .upload-state { padding: 1.5rem; }
             .upload-label { font-size: 18px; }
@@ -671,6 +626,7 @@
             .brand-field-wrap { padding: 14px 16px 16px; }
             .form-footer { padding: 14px 16px; }
             .field { padding: 14px 16px; }
+            .save-panel-row { flex-direction: column; align-items: stretch; }
         }
 
         @media (max-width: 400px) {
@@ -679,22 +635,9 @@
             .tooltip-body { left: 0; transform: none; }
             .tooltip-body::after { left: 12px; transform: none; }
         }
-    </style>
-</head>
-<body>
+{% endblock %}
 
-<header>
-    <div class="logo">
-        <div class="logo-mark">
-            <img src="/static/RogueGlobeV2.gif" alt="Rogue Globe">
-        </div>
-        <span class="logo-wordmark">RPM</span>
-        <div class="logo-divider"></div>
-        <span class="logo-sub">Rogue Pricing Model</span>
-    </div>
-    <span class="header-right" id="headerBrand">v1.2</span>
-</header>
-
+{% block content %}
 <main>
 
     <section class="hero">
@@ -760,7 +703,6 @@
                 <input type="hidden" name="mode" value="manual">
                 <input type="hidden" name="image_ref" id="imageRef" value="">
 
-                <!-- Brand field — master select, drives which panel shows -->
                 <div class="brand-field-wrap">
                     <div class="field-label-row">
                         <label for="brandSelect">Brand</label>
@@ -776,7 +718,6 @@
                     </select>
                 </div>
 
-                <!-- Per-brand signal panels -->
                 {% for brand_id, brand_cfg in brands.items() %}
                 <div id="panel-{{ brand_id }}"
                      class="signals-panel {% if brand_id == selected_brand %}active{% endif %}">
@@ -840,6 +781,37 @@
             {% endif %}
 
             <div class="result-divider"></div>
+
+            <!-- Save to Session panel -->
+            {% if active_sessions %}
+            <div class="save-panel">
+                <div class="save-panel-header">
+                    <span class="save-panel-label">Save to Session</span>
+                </div>
+                <form method="POST" action="/sessions/save-item" class="save-panel-form">
+                    <input type="hidden" name="brand" value="{{ selected_brand }}">
+                    <input type="hidden" name="image_ref" value="{{ image_ref_for_save or '' }}">
+                    <input type="hidden" name="features_json" value="{{ features_json or '{}' }}">
+                    <input type="hidden" name="low_price" value="{{ low_price or 0 }}">
+                    <input type="hidden" name="high_price" value="{{ high_price or 0 }}">
+                    <div class="save-panel-row">
+                        <select name="session_id">
+                            {% for s in active_sessions %}
+                            <option value="{{ s.id }}" {% if s.id == active_session_id %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="save-item-btn">Save Item</button>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <p class="save-empty-hint">
+                No active session —
+                <a href="/sessions">Start a session</a> to save items.
+            </p>
+            {% endif %}
         </div>
         {% endif %}
 
@@ -849,12 +821,9 @@
 
     </section>
 </main>
+{% endblock %}
 
-<footer>
-    <span class="footer-left">RPM · Internal Use Only · v1.2</span>
-    <div class="footer-mark"></div>
-</footer>
-
+{% block scripts %}
 <script>
     const BRANDS_CONFIG = {{ brands_json | safe }};
     const BRAND_META = {
@@ -874,7 +843,6 @@
         el.classList.toggle('is-error', !!isError);
     }
 
-    // ── Lock / unlock features form ─────────────────────────────────────────
     function lockForm() {
         document.getElementById('featuresWrap').classList.add('locked');
         document.getElementById('submitBtn').disabled = true;
@@ -886,7 +854,6 @@
         document.getElementById('submitBtn').disabled = false;
     }
 
-    // ── Staged loading status ────────────────────────────────────────────────
     let _stagingActive = false;
     let _stagingTimers = [];
 
@@ -907,7 +874,6 @@
         _stagingTimers = [];
     }
 
-    // ── Slot processing / done overlays ─────────────────────────────────────
     function setSlotProcessing(slotId, on) {
         const slot = document.getElementById('slot-' + slotId);
         if (!slot || !slot.classList.contains('has-image')) return;
@@ -936,7 +902,6 @@
         }
     }
 
-    // ── Activate a brand panel (no slot reset, no badge clear) ───────────────
     function activateBrand(brandId) {
         document.querySelectorAll('.signals-panel').forEach(p => {
             p.classList.remove('active');
@@ -957,7 +922,6 @@
         currentBrand = brandId || 'auto';
     }
 
-    // ── Brand switching (user-initiated) ────────────────────────────────────
     function handleBrandChange(brandId) {
         if (brandId === currentBrand) return;
 
@@ -972,21 +936,18 @@
         else unlockForm();
     }
 
-    // ── Multi-image upload (Hysteric) ────────────────────────────────────────
     const slotFiles = { front: null, tag: null, back: null, care: null };
 
     const SLOT_CONFIGS = {
-        front: { name: 'Front',       desc: 'Main graphic side', req: 'Required' },
-        tag:   { name: 'Tag',         desc: 'Collar / neck tag', req: 'Recommended' },
-        back:  { name: 'Back',        desc: 'Back graphic / print', req: null },
-        care:  { name: 'Care Label',  desc: 'Wash / care tag',  req: null },
+        front: { name: 'Front',      desc: 'Main graphic side', req: 'Required' },
+        tag:   { name: 'Tag',        desc: 'Collar / neck tag', req: 'Recommended' },
+        back:  { name: 'Back',       desc: 'Back graphic / print', req: null },
+        care:  { name: 'Care Label', desc: 'Wash / care tag',  req: null },
     };
 
     function slotDefaultHTML(slotId) {
         const cfg = SLOT_CONFIGS[slotId];
-        const reqLine = cfg.req
-            ? `<p class="slot-req">${cfg.req}</p>`
-            : '';
+        const reqLine = cfg.req ? `<p class="slot-req">${cfg.req}</p>` : '';
         return `<div class="slot-default">
             <p class="slot-name">${cfg.name}</p>
             <p class="slot-desc">${cfg.desc}</p>
@@ -1017,8 +978,6 @@
                     <span class="slot-label-text">${slotId.toUpperCase()}</span>
                     <button type="button" class="slot-clear" onclick="clearSlot('${slotId}', event)">✕</button>
                 </div>`;
-            // Stage 1: front triggers brand detection only.
-            // Tag/back/care are silently staged — full analysis runs at submit time.
             if (slotId === 'front') runDetect();
             else updateReadyStatus();
         };
@@ -1065,10 +1024,9 @@
     function updateReadyStatus() {
         if (!slotFiles.front) return;
         const count = Object.values(slotFiles).filter(Boolean).length;
-        setStatus(count + ' image' + (count === 1 ? '' : 's') + ' ready · Click "Get Price" to analyze');
+        setStatus(count + ' image' + (count === 1 ? '' : 's') + ' ready · Click "Get Price" to analyze');
     }
 
-    // ── Stage 1: fast brand detection (front image only) ─────────────────────
     function runDetect() {
         if (!slotFiles.front) return;
 
@@ -1095,7 +1053,6 @@
             });
     }
 
-    // ── Stage 2: full feature extraction (all images, runs at submit time) ────
     function runFullAnalyze(onSuccess) {
         _isAnalyzing = true;
         document.getElementById('submitBtn').disabled = true;
@@ -1115,7 +1072,6 @@
             .then(data => {
                 stopStagedStatus();
                 if (data.error) throw new Error(data.error);
-                console.log('[RPM] /analyze raw response:', JSON.stringify(data));
                 fillForm(data);
                 Object.keys(slotFiles).forEach(s => { if (slotFiles[s]) setSlotDone(s); });
                 onSuccess && onSuccess();
@@ -1129,9 +1085,7 @@
             .finally(() => { _isAnalyzing = false; });
     }
 
-    // ── Fill form from AI response ───────────────────────────────────────────
     function fillForm(features) {
-        // Switch to detected brand if needed
         if (features.detected_brand && features.detected_brand !== currentBrand) {
             activateBrand(features.detected_brand);
             document.getElementById('badge-brand').classList.add('visible');
@@ -1139,13 +1093,10 @@
         }
 
         const signals = BRANDS_CONFIG[currentBrand]?.signals;
-        console.log(`[RPM fillForm] brand=${currentBrand} signals=${signals?.length ?? 'NONE'}`);
         if (!signals) return;
 
         document.getElementById('imageRef').value = features.image_ref || '';
 
-        // Reset every field in the active brand panel to its default before
-        // applying new values — no prior Jinja2-rendered value survives.
         const _panel = document.getElementById('panel-' + currentBrand);
         if (_panel) {
             _panel.querySelectorAll('select').forEach(sel => {
@@ -1154,33 +1105,23 @@
             });
             _panel.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
         }
-        console.log(`[RPM fillForm] reset panel-${currentBrand} to defaults`);
 
         signals.forEach(sig => {
             const fieldEl = document.getElementById('field-' + currentBrand + '-' + sig.id);
             const badgeEl = document.getElementById('badge-' + currentBrand + '-' + sig.id);
-            if (!fieldEl) {
-                console.warn(`[RPM fillForm] SKIP ${sig.id}: element field-${currentBrand}-${sig.id} not found in DOM`);
-                return;
-            }
+            if (!fieldEl) return;
 
-            // Treat missing/null from AI as a safe fallback — never leave stale values.
-            const rawVal = features[sig.ai_key]; // may be undefined if key absent from response
+            const rawVal = features[sig.ai_key];
 
             let value;
             if (sig.type === 'bool') {
-                // undefined/null/false all map to '0'
                 value = rawVal ? '1' : '0';
             } else {
                 value = String(rawVal ?? sig.options[0][0]);
                 if (!value || value === 'null' || value === 'undefined') value = sig.options[0][0];
             }
 
-            const prevValue = fieldEl.value;
             fieldEl.value = value;
-            const actualValue = fieldEl.value;
-            const keyAbsent = rawVal === undefined;
-            console.log(`[RPM fillForm] ${sig.id}: raw=${JSON.stringify(rawVal)}${keyAbsent ? ' (KEY ABSENT — using fallback)' : ''} → wrote="${value}" prev="${prevValue}" actual="${actualValue}"${actualValue !== value ? ' ⚠️ VALUE MISMATCH — no matching <option>' : ''}`);
             fieldEl.classList.add('ai-filled');
 
             let hiddenEl = document.getElementById('ai_' + sig.id);
@@ -1204,28 +1145,20 @@
         unlockForm();
     }
 
-    // ── Form submit interceptor ──────────────────────────────────────────────
-    // If images are present, run full analysis first so the price always
-    // reflects the complete current image set, regardless of upload order.
     document.getElementById('priceForm').addEventListener('submit', function(e) {
-        if (!slotFiles.front || _isAnalyzing) return; // no images → normal submit
+        if (!slotFiles.front || _isAnalyzing) return;
         e.preventDefault();
         runFullAnalyze(function() {
-            // Small pause so ✓ indicators register before the page reloads
             setTimeout(() => {
-                const _snap = {};
-                new FormData(document.getElementById('priceForm')).forEach((v, k) => _snap[k] = v);
-                console.log('[RPM] form submit snapshot:', JSON.stringify(_snap));
                 document.getElementById('priceForm').submit();
             }, 200);
         });
     });
 
-    // ── Init ─────────────────────────────────────────────────────────────────
+    // Init
     if (currentBrand !== 'auto' && BRAND_META[currentBrand]) {
         document.getElementById('headerBrand').textContent = BRAND_META[currentBrand].short + ' · v1.2';
     }
-    // Start submit disabled if form is locked (no photo analyzed yet)
     if (document.getElementById('featuresWrap').classList.contains('locked')) {
         document.getElementById('submitBtn').disabled = true;
     }
@@ -1235,7 +1168,19 @@
         document.querySelector('.result-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
     {% endif %}
-</script>
 
-</body>
-</html>
+    // Show saved toast
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('saved')) {
+            const toast = document.createElement('div');
+            toast.className = 'saved-toast';
+            toast.textContent = 'Item saved to session';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('fade-out'), 1800);
+            setTimeout(() => toast.remove(), 2300);
+            history.replaceState({}, '', '/');
+        }
+    })();
+</script>
+{% endblock %}

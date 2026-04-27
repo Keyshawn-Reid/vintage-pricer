@@ -1,0 +1,885 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.name }} — RPM{% endblock %}
+
+{% block page_css %}
+        .page-wrap {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 76px 2rem 6rem;
+        }
+
+        /* ── Breadcrumb ── */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb-link {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .breadcrumb-link:hover { color: var(--text); }
+
+        .breadcrumb-sep {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--border);
+        }
+
+        .breadcrumb-current {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-light);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+
+        /* ── Session header ── */
+        .session-header {
+            margin-bottom: 28px;
+        }
+
+        .session-title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .session-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            flex: 1;
+        }
+
+        .session-status-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 9px;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .session-status-badge.active    { background: var(--yellow); color: var(--text); }
+        .session-status-badge.submitted { background: hsl(210, 70%, 48%); color: #fff; }
+        .session-status-badge.printed   { background: hsl(142, 52%, 42%); color: #fff; }
+
+        .session-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .session-sub-dot {
+            width: 3px; height: 3px;
+            background: var(--border);
+            border-radius: 50%;
+        }
+
+        /* ── Actions bar ── */
+        .actions-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+        }
+
+        .select-all-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .select-all-check {
+            width: 16px; height: 16px;
+            cursor: pointer;
+            accent-color: var(--text);
+        }
+
+        .select-all-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .selected-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .actions-spacer { flex: 1; }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: none;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        .action-btn.primary {
+            background: var(--text);
+            color: var(--yellow);
+            border-color: var(--text);
+        }
+
+        .action-btn.primary:hover {
+            background: hsl(64, 8%, 22%);
+            color: var(--yellow);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* ── Item list ── */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border-light);
+            border: 1px solid var(--border-light);
+            border-top: none;
+        }
+
+        .item-card {
+            background: #fff;
+            display: grid;
+            grid-template-columns: 36px 80px 1fr;
+            gap: 16px;
+            padding: 16px 16px;
+            align-items: start;
+            transition: background 0.12s;
+        }
+
+        .item-card:hover { background: var(--surface); }
+        .item-card.is-selected { background: var(--yellow-dim); }
+
+        .item-check-col {
+            display: flex;
+            align-items: flex-start;
+            padding-top: 4px;
+        }
+
+        .item-check {
+            width: 16px; height: 16px;
+            cursor: pointer;
+            accent-color: var(--text);
+        }
+
+        .item-thumb {
+            width: 80px; height: 80px;
+            object-fit: cover;
+            display: block;
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        .item-thumb-placeholder {
+            width: 80px; height: 80px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            color: var(--text-light);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .item-body { min-width: 0; }
+
+        .item-title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .item-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .item-brand-chip {
+            font-family: 'Space Mono', monospace;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            padding: 2px 6px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .item-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .feature-chip {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            padding: 2px 6px;
+        }
+
+        .item-pricing {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .item-suggested {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .final-price-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .final-price-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .final-price-prefix {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            flex-shrink: 0;
+        }
+
+        .final-price-input {
+            width: 72px;
+            border: none;
+            border-bottom: 1.5px solid var(--border-light);
+            border-radius: 0;
+            background: transparent;
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            padding: 2px 2px 4px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .final-price-input:focus { border-bottom-color: var(--text); }
+        .final-price-input.saved { border-bottom-color: var(--status-approved); }
+
+        .item-status-btn {
+            padding: 4px 10px;
+            border: 1px solid var(--border-light);
+            background: none;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .item-status-btn:hover { border-color: var(--text); color: var(--text); }
+        .item-status-btn[data-status="pending"]   { color: var(--text-muted); }
+        .item-status-btn[data-status="approved"]  { border-color: var(--status-approved); color: var(--status-approved); background: hsla(142, 52%, 42%, 0.06); }
+        .item-status-btn[data-status="printed"]   { border-color: var(--status-printed); color: var(--status-printed); background: hsla(210, 70%, 48%, 0.06); }
+
+        /* ── Empty items ── */
+        .items-empty {
+            padding: 56px 0;
+            text-align: center;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            border-top: none;
+        }
+
+        .items-empty-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .items-empty-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            line-height: 1.9;
+        }
+
+        .items-empty-sub a {
+            color: var(--text);
+            text-decoration: underline;
+        }
+
+        /* ── Session actions (bottom) ── */
+        .session-actions {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .session-status-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .session-status-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-light);
+            background: none;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .session-status-btn:hover { border-color: var(--text); color: var(--text); }
+        .session-status-btn.active-status { background: var(--text); color: var(--yellow); border-color: var(--text); cursor: default; }
+
+        @media (max-width: 640px) {
+            .page-wrap { padding: 72px 1.25rem 5rem; }
+            .item-card { grid-template-columns: 28px 64px 1fr; gap: 10px; padding: 14px 12px; }
+            .item-thumb, .item-thumb-placeholder { width: 64px; height: 64px; }
+            .actions-bar { gap: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .item-card { grid-template-columns: 28px 1fr; }
+            .item-thumb, .item-thumb-placeholder { display: none; }
+        }
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <div class="breadcrumb">
+        <a href="/sessions" class="breadcrumb-link">← Sessions</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ session.name }}</span>
+    </div>
+
+    <div class="session-header">
+        <div class="session-title-row">
+            <h1 class="session-headline">{{ session.name }}</h1>
+            <span class="session-status-badge {{ session.status }}" id="sessionStatusBadge">
+                {{ session.status }}
+            </span>
+        </div>
+        <div class="session-sub">
+            <span id="itemCountLabel">{{ items|length }} item{{ 's' if items|length != 1 else '' }}</span>
+            <span class="session-sub-dot"></span>
+            <span id="sessionCreated" data-iso="{{ session.created_at }}">{{ session.created_at[:10] }}</span>
+            <span class="session-sub-dot"></span>
+            <span>{{ session.id }}</span>
+        </div>
+    </div>
+
+    <!-- Actions bar -->
+    <div class="actions-bar">
+        <div class="select-all-wrap">
+            <input
+                type="checkbox"
+                class="select-all-check"
+                id="selectAll"
+                onchange="toggleSelectAll()"
+                {% if not items %}disabled{% endif %}
+            >
+            <label class="select-all-label" for="selectAll">Select All</label>
+        </div>
+        <span class="selected-count" id="selectedCount" style="display:none"></span>
+        <span class="actions-spacer"></span>
+        <button
+            class="action-btn"
+            id="exportBtn"
+            onclick="exportItems()"
+            disabled
+        >↓ JSON</button>
+        <button
+            class="action-btn primary"
+            id="printBtn"
+            onclick="printTags()"
+            disabled
+        >Print Tags</button>
+    </div>
+
+    <!-- Items list -->
+    {% if items %}
+    <div class="items-list" id="itemsList">
+        {% for item in items %}
+        <div
+            class="item-card"
+            id="item-{{ item.id }}"
+            data-id="{{ item.id }}"
+            data-status="{{ item.status }}"
+            data-title="{{ item.title or '' }}"
+            data-brand="{{ brands.get(item.brand, {}).get('label', item.brand) }}"
+            data-final="{{ item.final_price or '' }}"
+            data-low="{{ item.suggested_low or 0 }}"
+            data-high="{{ item.suggested_high or 0 }}"
+        >
+            <!-- Checkbox -->
+            <div class="item-check-col">
+                <input
+                    type="checkbox"
+                    class="item-check"
+                    onchange="onItemCheck(this, '{{ item.id }}')"
+                >
+            </div>
+
+            <!-- Thumbnail -->
+            {% if item.image_ref %}
+            <img
+                class="item-thumb"
+                src="/session_images/{{ item.image_ref }}"
+                alt="{{ item.title or 'Item' }}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="item-thumb-placeholder" style="display:none">No img</div>
+            {% else %}
+            <div class="item-thumb-placeholder">No img</div>
+            {% endif %}
+
+            <!-- Body -->
+            <div class="item-body">
+                <div class="item-title-row">
+                    <span class="item-title">{{ item.title or 'Untitled' }}</span>
+                    <span class="item-brand-chip">
+                        {{ brands.get(item.brand, {}).get('short', item.brand) }}
+                    </span>
+                </div>
+
+                {% set features_list = summarize_features(item.brand, item.features or {}) %}
+                {% if features_list %}
+                <div class="item-features">
+                    {% for f in features_list %}
+                    <span class="feature-chip">{{ f }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="item-pricing">
+                    {% if item.suggested_low %}
+                    <span class="item-suggested">
+                        Est. ${{ "%.2f"|format(item.suggested_low) }} – ${{ "%.2f"|format(item.suggested_high) }}
+                    </span>
+                    {% endif %}
+
+                    <div class="final-price-wrap">
+                        <span class="final-price-label">Final</span>
+                        <span class="final-price-prefix">$</span>
+                        <input
+                            type="number"
+                            class="final-price-input"
+                            id="price-{{ item.id }}"
+                            placeholder="—"
+                            value="{{ item.final_price if item.final_price is not none else '' }}"
+                            min="0" step="0.01"
+                            onchange="savePrice('{{ item.id }}', this)"
+                            onblur="savePrice('{{ item.id }}', this)"
+                        >
+                    </div>
+
+                    <button
+                        class="item-status-btn"
+                        id="status-{{ item.id }}"
+                        data-status="{{ item.status }}"
+                        onclick="cycleStatus('{{ item.id }}', this)"
+                    >{{ item.status }}</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="items-empty">
+        <p class="items-empty-title">No items yet</p>
+        <p class="items-empty-sub">
+            Price an item on the <a href="/">pricing tool</a>,<br>
+            then save it to this session.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Session status controls -->
+    <div class="session-actions">
+        <div class="session-status-btns">
+            <button
+                class="session-status-btn {% if session.status == 'active' %}active-status{% endif %}"
+                onclick="setSessionStatus('active')"
+            >Active</button>
+            <button
+                class="session-status-btn {% if session.status == 'submitted' %}active-status{% endif %}"
+                onclick="setSessionStatus('submitted')"
+            >Mark Submitted</button>
+            <button
+                class="session-status-btn {% if session.status == 'printed' %}active-status{% endif %}"
+                onclick="setSessionStatus('printed')"
+            >Mark Printed</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SESSION_ID = "{{ session.id }}";
+    let selectedIds = new Set();
+
+    // Format dates
+    document.querySelectorAll('[data-iso]').forEach(el => {
+        const d = new Date(el.dataset.iso);
+        if (!isNaN(d)) {
+            el.textContent = d.toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+                hour: 'numeric', minute: '2-digit'
+            });
+        }
+    });
+
+    // ── Selection ────────────────────────────────────────────────────────────
+    function onItemCheck(checkbox, itemId) {
+        if (checkbox.checked) {
+            selectedIds.add(itemId);
+            document.getElementById('item-' + itemId).classList.add('is-selected');
+        } else {
+            selectedIds.delete(itemId);
+            document.getElementById('item-' + itemId).classList.remove('is-selected');
+        }
+        updateSelectionUI();
+    }
+
+    function toggleSelectAll() {
+        const all = document.getElementById('selectAll');
+        document.querySelectorAll('.item-check').forEach(cb => {
+            cb.checked = all.checked;
+            const id = cb.closest('.item-card').dataset.id;
+            if (all.checked) {
+                selectedIds.add(id);
+                document.getElementById('item-' + id).classList.add('is-selected');
+            } else {
+                selectedIds.delete(id);
+                document.getElementById('item-' + id).classList.remove('is-selected');
+            }
+        });
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const n = selectedIds.size;
+        const countEl = document.getElementById('selectedCount');
+        const printBtn = document.getElementById('printBtn');
+        const exportBtn = document.getElementById('exportBtn');
+
+        if (n > 0) {
+            countEl.textContent = n + ' selected';
+            countEl.style.display = '';
+        } else {
+            countEl.style.display = 'none';
+        }
+
+        const hasItems = document.querySelectorAll('.item-card').length > 0;
+        printBtn.disabled = n === 0;
+        exportBtn.disabled = n === 0;
+
+        // Sync select-all indeterminate state
+        const total = document.querySelectorAll('.item-check').length;
+        const allCheck = document.getElementById('selectAll');
+        if (allCheck) {
+            allCheck.indeterminate = n > 0 && n < total;
+            allCheck.checked = total > 0 && n === total;
+        }
+    }
+
+    // ── Price editing ─────────────────────────────────────────────────────────
+    let _priceTimers = {};
+
+    function savePrice(itemId, input) {
+        clearTimeout(_priceTimers[itemId]);
+        _priceTimers[itemId] = setTimeout(() => {
+            const val = parseFloat(input.value);
+            if (isNaN(val) || input.value === '') return;
+            fetch(`/sessions/${SESSION_ID}/items/${itemId}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ final_price: val }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    input.classList.add('saved');
+                    setTimeout(() => input.classList.remove('saved'), 1200);
+                }
+            });
+        }, 600);
+    }
+
+    // ── Status cycling ────────────────────────────────────────────────────────
+    const STATUS_CYCLE = { pending: 'approved', approved: 'printed', printed: 'pending' };
+
+    function cycleStatus(itemId, btn) {
+        const current = btn.dataset.status;
+        const next = STATUS_CYCLE[current] || 'pending';
+        fetch(`/sessions/${SESSION_ID}/items/${itemId}/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: next }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.dataset.status = next;
+                btn.textContent = next;
+            }
+        });
+    }
+
+    // ── Session status ────────────────────────────────────────────────────────
+    function setSessionStatus(status) {
+        fetch(`/sessions/${SESSION_ID}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById('sessionStatusBadge');
+                badge.className = 'session-status-badge ' + status;
+                badge.textContent = status;
+                document.querySelectorAll('.session-status-btn').forEach(btn => {
+                    btn.classList.remove('active-status');
+                });
+                event.target.classList.add('active-status');
+            }
+        });
+    }
+
+    // ── Export JSON ───────────────────────────────────────────────────────────
+    function exportItems() {
+        if (selectedIds.size === 0) return;
+        const ids = Array.from(selectedIds).join(',');
+        window.location.href = `/sessions/${SESSION_ID}/export?items=${encodeURIComponent(ids)}`;
+    }
+
+    // ── Print tags ────────────────────────────────────────────────────────────
+    function printTags() {
+        if (selectedIds.size === 0) return;
+
+        const items = [];
+        selectedIds.forEach(id => {
+            const card = document.getElementById('item-' + id);
+            if (!card) return;
+            const priceInput = document.getElementById('price-' + id);
+            const finalPrice = priceInput && priceInput.value
+                ? parseFloat(priceInput.value)
+                : null;
+            const sugLow = parseFloat(card.dataset.low) || null;
+            const sugHigh = parseFloat(card.dataset.high) || null;
+            const displayPrice = finalPrice
+                ? '$' + finalPrice.toFixed(0)
+                : (sugLow ? '$' + Math.round((sugLow + sugHigh) / 2) : '—');
+
+            const chips = [];
+            card.querySelectorAll('.feature-chip').forEach(c => chips.push(c.textContent.trim()));
+
+            items.push({
+                title: card.dataset.title || 'Item',
+                brand: card.dataset.brand || '',
+                features: chips,
+                price: displayPrice,
+                image_ref: card.querySelector('.item-thumb')?.src || null,
+            });
+        });
+
+        const tagHTML = items.map(item => `
+            <div class="tag">
+                <div class="tag-store">Rogue Planet</div>
+                <div class="tag-brand">${escapeHTML(item.brand)}</div>
+                <div class="tag-features">${item.features.slice(0,4).map(f => escapeHTML(f)).join(' · ') || '&nbsp;'}</div>
+                <div class="tag-price">${escapeHTML(item.price)}</div>
+            </div>
+        `).join('');
+
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Price Tags — RPM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Space Mono', monospace; background: #fff; padding: 16px; }
+  .tags-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .tag {
+    border: 1px solid #000;
+    padding: 14px 12px;
+    page-break-inside: avoid;
+    text-align: center;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .tag-store {
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #666;
+  }
+  .tag-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .tag-features {
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #555;
+    line-height: 1.5;
+  }
+  .tag-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 900;
+    margin-top: 4px;
+  }
+  @media print {
+    body { padding: 0; }
+    .tags-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="tags-grid">${tagHTML}</div>
+<script>
+  window.onload = function() { window.print(); }
+<\/script>
+</body>
+</html>`);
+        printWindow.document.close();
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Init
+    updateSelectionUI();
+</script>
+{% endblock %}
