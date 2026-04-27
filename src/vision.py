@@ -62,7 +62,11 @@ def extract_features_from_image(image_path, brand="harley"):
 
     result = response.choices[0].message.content
     result = result.strip().replace("```json", "").replace("```", "").strip()
-    return json.loads(result)
+    try:
+        return json.loads(result)
+    except json.JSONDecodeError as e:
+        print(f"[vision] JSON parse error in extract_features_from_image: {e}\nRaw response: {result!r}")
+        raise ValueError(f"GPT returned unparseable JSON: {e}") from e
 
 
 def extract_features_from_images(image_paths: dict, brand: str = "hysteric") -> dict:
@@ -92,7 +96,11 @@ def extract_features_from_images(image_paths: dict, brand: str = "hysteric") -> 
 
     result = response.choices[0].message.content.strip()
     result = result.replace("```json", "").replace("```", "").strip()
-    return json.loads(result)
+    try:
+        return json.loads(result)
+    except json.JSONDecodeError as e:
+        print(f"[vision] JSON parse error in extract_features_from_images: {e}\nRaw response: {result!r}")
+        raise ValueError(f"GPT returned unparseable JSON: {e}") from e
 
 
 def detect_brand(image_paths: dict) -> str:
@@ -110,7 +118,11 @@ def detect_brand(image_paths: dict) -> str:
         max_tokens=50,
     )
     result = response.choices[0].message.content.strip().replace("```json", "").replace("```", "").strip()
-    detected = json.loads(result).get("detected_brand", "unknown")
+    try:
+        detected = json.loads(result).get("detected_brand", "unknown")
+    except json.JSONDecodeError as e:
+        print(f"[vision] JSON parse error in detect_brand: {e}\nRaw response: {result!r}")
+        return "harley"
     from src.brands import BRANDS
     return detected if detected in BRANDS else "harley"
 

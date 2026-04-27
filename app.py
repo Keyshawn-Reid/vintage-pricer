@@ -11,6 +11,7 @@ import sys
 import os
 import re
 import shutil
+import tempfile
 from datetime import datetime, timezone
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -25,10 +26,44 @@ from src.sessions_db import (
 )
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "rpm-dev-secret-key")
+
+# ── Secret key — must be set in environment; no insecure fallback ────────────
+_secret = os.environ.get("FLASK_SECRET_KEY")
+if not _secret:
+    raise RuntimeError(
+        "FLASK_SECRET_KEY is not set. "
+        "Add it to .env or Render env vars. "
+        "Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\""
+    )
+app.secret_key = _secret
+
+# ── Upload limits ─────────────────────────────────────────────────────────────
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20 MB hard cap
 
 SESSION_IMAGES_DIR = os.path.join("data", "session_images")
 os.makedirs(SESSION_IMAGES_DIR, exist_ok=True)
+
+# ── Allowed upload types ──────────────────────────────────────────────────────
+_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+_ALLOWED_MIMETYPES  = {"image/jpeg", "image/png", "image/webp"}
+
+
+def _validate_image(file_storage):
+    """Return an error string if the upload is invalid, else None."""
+    if not file_storage or not file_storage.filename:
+        return "No file provided."
+    ext = file_storage.filename.rsplit(".", 1)[-1].lower() if "." in file_storage.filename else ""
+    if ext not in _ALLOWED_EXTENSIONS:
+        return f"File type '.{ext}' not allowed — upload JPG, PNG, or WebP."
+    mime = (file_storage.content_type or "").split(";")[0].strip().lower()
+    if mime and mime not in _ALLOWED_MIMETYPES:
+        return f"Unrecognised MIME type '{mime}' — upload JPG, PNG, or WebP."
+    return None
+
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({"error": "Image too large — 20 MB maximum per file."}), 413
 
 # ── Initialize sessions DB ───────────────────────────────────────────────────
 init_db()
@@ -355,13 +390,19 @@ def detect():
     front = request.files.get("front")
     if not front:
         return jsonify({"error": "Front image required"}), 400
-    path = "temp_detect.jpg"
-    front.save(path)
+    err = _validate_image(front)
+    if err:
+        return jsonify({"error": err}), 400
+
+    fd, path = tempfile.mkstemp(suffix=".jpg")
+    os.close(fd)
     try:
+        front.save(path)
         brand = detect_brand({"front": path})
         return jsonify({"detected_brand": brand})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"[RPM /detect] error: {e}", flush=True)
+        return jsonify({"error": "Brand detection failed — try again or select manually."}), 500
     finally:
         if os.path.exists(path):
             os.remove(path)
@@ -377,12 +418,19 @@ def analyze():
     try:
         for slot in ("front", "tag", "back", "care"):
             f = request.files.get(slot)
-            if f:
-                path = f"temp_{slot}.jpg"
-                f.save(path)
-                temp_paths[slot] = path
+            if not f:
+                continue
+            err = _validate_image(f)
+            if err:
+                return jsonify({"error": f"Slot '{slot}': {err}"}), 400
+            fd, path = tempfile.mkstemp(suffix=".jpg")
+            os.close(fd)
+            f.save(path)
+            temp_paths[slot] = path
+
         if "front" not in temp_paths:
             return jsonify({"error": "Front image is required"}), 400
+
         raw = extract_features_from_images(temp_paths, brand=brand)
         print(f"[RPM /analyze] brand={brand} images={list(temp_paths.keys())} raw={json.dumps(raw)}", flush=True)
         features = normalize_features(raw, brand)
@@ -390,13 +438,13 @@ def analyze():
         image_ref = compute_image_ref(temp_paths["front"])
         features["image_ref"] = image_ref
 
-        # Save a copy of the front image for session item thumbnails
         img_save_path = os.path.join(SESSION_IMAGES_DIR, f"{image_ref}.jpg")
         if not os.path.exists(img_save_path):
             shutil.copy2(temp_paths["front"], img_save_path)
 
         return jsonify(features)
     except Exception as e:
+        print(f"[RPM /analyze] error: {e}", flush=True)
         return jsonify({"error": str(e)}), 500
     finally:
         for p in temp_paths.values():
