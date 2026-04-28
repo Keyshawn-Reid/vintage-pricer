@@ -318,6 +318,36 @@
             background: var(--yellow); border-radius: 50%;
         }
 
+        /* ── Toast ── */
+        #rpm-toast-wrap {
+            position: fixed;
+            bottom: 24px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 900;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rpm-toast {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(0);
+        }
+
+        .rpm-toast.is-success { background: var(--text); color: var(--yellow); }
+        .rpm-toast.is-error   { background: #c33; color: #fff; }
+        .rpm-toast.fade-out   { opacity: 0; transform: translateY(8px); }
+
         /* ── Mobile ── */
         @media (max-width: 640px) {
             header { padding: 0 1.25rem; }
@@ -325,6 +355,30 @@
             .logo-sub { display: none; }
             .logo-divider { display: none; }
             .active-session-chip { max-width: 100px; }
+        }
+
+        /* Touch devices: make hub label always visible */
+        @media (hover: none) {
+            .logo-mark {
+                flex-direction: column;
+                width: auto;
+                height: auto;
+                min-width: 40px;
+                min-height: 40px;
+                justify-content: center;
+                gap: 2px;
+            }
+            .logo-mark img { width: 22px; height: 22px; }
+            .hub-trigger-label {
+                opacity: 1 !important;
+                pointer-events: auto;
+                position: static;
+                transform: none;
+                background: transparent;
+                font-size: 6px;
+                padding: 0;
+                color: var(--text-muted);
+            }
         }
 
         {% block page_css %}{% endblock %}
@@ -397,12 +451,26 @@
 
 {% block content %}{% endblock %}
 
+<div id="rpm-toast-wrap"></div>
+
 <footer>
     <span class="footer-left">RPM · Internal Use Only · v1.2</span>
     <div class="footer-mark"></div>
 </footer>
 
 <script>
+    // ── Shared toast ─────────────────────────────────────────────────────────
+    function showToast(message, type) {
+        const wrap = document.getElementById('rpm-toast-wrap');
+        if (!wrap) return;
+        const toast = document.createElement('div');
+        toast.className = 'rpm-toast ' + (type === 'error' ? 'is-error' : 'is-success');
+        toast.textContent = message;
+        wrap.appendChild(toast);
+        setTimeout(() => toast.classList.add('fade-out'), 2000);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
     function openHub() {
         document.getElementById('hubDrawer').classList.add('open');
         document.getElementById('hubBackdrop').classList.add('open');

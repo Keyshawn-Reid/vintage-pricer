@@ -237,10 +237,140 @@
             text-transform: uppercase;
         }
 
+        /* ── Session card wrapper (for rename button positioning) ── */
+        .session-card-outer {
+            position: relative;
+            background: #fff;
+        }
+
+        .card-rename-btn {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: none;
+            border: 1px solid transparent;
+            width: 26px; height: 26px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+
+        .session-card-outer:hover .card-rename-btn,
+        .card-rename-btn:focus { opacity: 1; }
+        .card-rename-btn:hover { border-color: var(--border); color: var(--text); }
+
+        /* ── Modal ── */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(20, 20, 18, 0.48);
+            z-index: 400;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop.open { display: flex; }
+
+        .modal {
+            background: #fff;
+            border: 1px solid var(--border-light);
+            width: 100%; max-width: 400px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.14);
+        }
+
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: 1px solid var(--border-light);
+            width: 26px; height: 26px;
+            cursor: pointer; font-size: 10px;
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .modal-close:hover { border-color: var(--text); color: var(--text); }
+
+        .modal-body { padding: 20px; }
+
+        .modal-field-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-muted);
+            display: block; margin-bottom: 8px;
+        }
+
+        .modal-input {
+            width: 100%;
+            border: none; border-bottom: 1.5px solid var(--border-light);
+            border-radius: 0; background: transparent;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px; font-weight: 500;
+            color: var(--text);
+            padding: 6px 0 8px;
+            outline: none; appearance: none;
+            transition: border-color 0.15s;
+        }
+
+        .modal-input:focus { border-bottom-color: var(--text); }
+
+        .modal-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; color: var(--text-muted);
+            letter-spacing: 0.06em; text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .modal-footer {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 8px; padding: 14px 20px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .modal-cancel {
+            padding: 8px 16px; background: none;
+            border: 1px solid var(--border-light); cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-muted); transition: all 0.15s;
+        }
+
+        .modal-cancel:hover { border-color: var(--text); color: var(--text); }
+
+        .modal-confirm {
+            padding: 8px 18px; background: var(--text);
+            border: none; cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--yellow); transition: background 0.15s;
+        }
+
+        .modal-confirm:hover { background: hsl(64, 8%, 22%); }
+
         @media (max-width: 640px) {
             .page-wrap { padding: 80px 1.25rem 5rem; }
             .sessions-grid { grid-template-columns: 1fr; }
             .search-input { font-size: 16px; }
+            .card-rename-btn { opacity: 1; }
         }
 {% endblock %}
 
@@ -251,12 +381,12 @@
 
     <div class="page-title-row">
         <h1 class="page-headline">Sessions</h1>
-        <form method="POST" action="/sessions/new" id="newSessionForm">
-            <input type="hidden" name="name" id="newSessionName" value="">
-            <button type="submit" class="new-session-btn">
-                + Start New Session
-            </button>
+        <form method="POST" action="/sessions/new" id="newSessionForm" style="display:none">
+            <input type="text" name="name" id="newSessionNameField" value="">
         </form>
+        <button type="button" class="new-session-btn" onclick="openNewSessionModal()">
+            + Start New Session
+        </button>
     </div>
 
     {% if sessions %}
@@ -279,30 +409,76 @@
 
     <div class="sessions-grid" id="sessionsGrid">
         {% for s in sessions %}
-        <a
-            href="/sessions/{{ s.id }}"
-            class="session-card"
+        <div class="session-card-outer"
             data-name="{{ s.name | lower }}"
             data-status="{{ s.status }}"
         >
-            <div class="session-card-top">
-                <span class="session-name">{{ s.name }}</span>
-                <span class="session-status-badge {{ s.status }}">{{ s.status }}</span>
-            </div>
-            <div class="session-meta">
-                <span class="session-meta-item">
-                    {{ s.item_count }} item{{ 's' if s.item_count != 1 else '' }}
-                </span>
-                <span class="session-meta-dot"></span>
-                <span class="session-meta-item" data-iso="{{ s.created_at }}">
-                    {{ s.created_at[:10] }}
-                </span>
-            </div>
-        </a>
+            <a href="/sessions/{{ s.id }}" class="session-card">
+                <div class="session-card-top">
+                    <span class="session-name">{{ s.name }}</span>
+                    <span class="session-status-badge {{ s.status }}">{{ s.status }}</span>
+                </div>
+                <div class="session-meta">
+                    <span class="session-meta-item">
+                        {{ s.item_count }} item{{ 's' if s.item_count != 1 else '' }}
+                    </span>
+                    <span class="session-meta-dot"></span>
+                    <span class="session-meta-item" data-iso="{{ s.created_at }}">
+                        {{ s.created_at[:10] }}
+                    </span>
+                </div>
+            </a>
+            <button
+                class="card-rename-btn"
+                type="button"
+                title="Rename session"
+                data-session-id="{{ s.id }}"
+                data-session-name="{{ s.name | e }}"
+                onclick="openRenameModal(this, event)"
+            >✎</button>
+        </div>
         {% endfor %}
     </div>
 
     <div class="no-results" id="noResults">No sessions match your search.</div>
+
+    <!-- New Session Modal -->
+    <div class="modal-backdrop" id="newSessionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">New Session</span>
+                <button class="modal-close" onclick="closeNewSessionModal()" type="button">✕</button>
+            </div>
+            <div class="modal-body">
+                <label class="modal-field-label" for="newSessionInput">Session Name</label>
+                <input type="text" class="modal-input" id="newSessionInput"
+                       placeholder="e.g. Friday New Arrivals" maxlength="64" autocomplete="off">
+                <p class="modal-hint">Leave blank to auto-name by date.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-cancel" onclick="closeNewSessionModal()">Cancel</button>
+                <button type="button" class="modal-confirm" onclick="submitNewSession()">Create Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Session Modal -->
+    <div class="modal-backdrop" id="renameSessionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Rename Session</span>
+                <button class="modal-close" onclick="closeRenameModal()" type="button">✕</button>
+            </div>
+            <div class="modal-body">
+                <label class="modal-field-label" for="renameInput">Session Name</label>
+                <input type="text" class="modal-input" id="renameInput" maxlength="64" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-cancel" onclick="closeRenameModal()">Cancel</button>
+                <button type="button" class="modal-confirm" onclick="submitRename()">Rename</button>
+            </div>
+        </div>
+    </div>
 
     {% else %}
     <div class="empty-state">
@@ -317,7 +493,7 @@
 
 {% block scripts %}
 <script>
-    // Format ISO dates to friendly local time
+    // Format ISO dates
     document.querySelectorAll('[data-iso]').forEach(el => {
         const d = new Date(el.dataset.iso);
         if (!isNaN(d)) {
@@ -327,22 +503,106 @@
         }
     });
 
+    // Filter uses .session-card-outer which carries data-name / data-status
     function filterSessions() {
         const query = document.getElementById('sessionSearch').value.toLowerCase().trim();
         const status = document.getElementById('statusFilter').value;
-        const cards = document.querySelectorAll('.session-card');
+        const wrappers = document.querySelectorAll('.session-card-outer');
         let visible = 0;
 
-        cards.forEach(card => {
-            const nameMatch = !query || card.dataset.name.includes(query);
-            const statusMatch = !status || card.dataset.status === status;
+        wrappers.forEach(w => {
+            const nameMatch = !query || w.dataset.name.includes(query);
+            const statusMatch = !status || w.dataset.status === status;
             const show = nameMatch && statusMatch;
-            card.style.display = show ? '' : 'none';
+            w.style.display = show ? '' : 'none';
             if (show) visible++;
         });
 
         const noResults = document.getElementById('noResults');
         if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
     }
+
+    // ── New Session Modal ─────────────────────────────────────────────────────
+    function openNewSessionModal() {
+        document.getElementById('newSessionInput').value = '';
+        document.getElementById('newSessionModal').classList.add('open');
+        setTimeout(() => document.getElementById('newSessionInput').focus(), 60);
+    }
+
+    function closeNewSessionModal() {
+        document.getElementById('newSessionModal').classList.remove('open');
+    }
+
+    function submitNewSession() {
+        const name = document.getElementById('newSessionInput').value.trim();
+        document.getElementById('newSessionNameField').value = name;
+        document.getElementById('newSessionForm').submit();
+    }
+
+    document.getElementById('newSessionInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter')  submitNewSession();
+        if (e.key === 'Escape') closeNewSessionModal();
+    });
+
+    document.getElementById('newSessionModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeNewSessionModal();
+    });
+
+    // ── Rename Session Modal ──────────────────────────────────────────────────
+    let _renameTargetId = null;
+    let _renameTargetWrapper = null;
+
+    function openRenameModal(btn, e) {
+        e.preventDefault();
+        e.stopPropagation();
+        _renameTargetId = btn.dataset.sessionId;
+        _renameTargetWrapper = btn.closest('.session-card-outer');
+        document.getElementById('renameInput').value = btn.dataset.sessionName;
+        document.getElementById('renameSessionModal').classList.add('open');
+        setTimeout(() => {
+            const inp = document.getElementById('renameInput');
+            inp.focus(); inp.select();
+        }, 60);
+    }
+
+    function closeRenameModal() {
+        document.getElementById('renameSessionModal').classList.remove('open');
+    }
+
+    function submitRename() {
+        const name = document.getElementById('renameInput').value.trim();
+        if (!name) return;
+
+        fetch(`/sessions/${_renameTargetId}/rename`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            closeRenameModal();
+            if (_renameTargetWrapper) {
+                _renameTargetWrapper.querySelector('.session-name').textContent = name;
+                _renameTargetWrapper.dataset.name = name.toLowerCase();
+                const renameBtn = _renameTargetWrapper.querySelector('.card-rename-btn');
+                if (renameBtn) renameBtn.dataset.sessionName = name;
+            }
+            showToast('Session renamed');
+        })
+        .catch(err => {
+            closeRenameModal();
+            showToast('Rename failed — ' + err.message, 'error');
+        });
+    }
+
+    document.getElementById('renameInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter')  submitRename();
+        if (e.key === 'Escape') closeRenameModal();
+    });
+
+    document.getElementById('renameSessionModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeRenameModal();
+    });
 </script>
 {% endblock %}

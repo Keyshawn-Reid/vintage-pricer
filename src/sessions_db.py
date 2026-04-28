@@ -163,6 +163,13 @@ def get_items_by_ids(item_ids: list) -> list:
     return result
 
 
+def rename_session(session_id: str, name: str):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE sessions SET name = ? WHERE id = ?", (name, session_id)
+        )
+
+
 def count_sessions_today(date_prefix: str) -> int:
     with get_db() as conn:
         row = conn.execute(

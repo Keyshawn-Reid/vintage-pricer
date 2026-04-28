@@ -464,27 +464,6 @@
 
         .save-empty-hint a { color: var(--text); text-decoration: underline; }
 
-        /* ── Saved toast ── */
-        .saved-toast {
-            position: fixed;
-            bottom: 24px; left: 50%;
-            transform: translateX(-50%) translateY(0);
-            background: var(--text); color: var(--yellow);
-            font-family: 'Space Mono', monospace;
-            font-size: 10px; font-weight: 700;
-            letter-spacing: 0.12em; text-transform: uppercase;
-            padding: 10px 20px;
-            z-index: 500;
-            opacity: 1;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            pointer-events: none;
-        }
-
-        .saved-toast.fade-out {
-            opacity: 0;
-            transform: translateX(-50%) translateY(8px);
-        }
-
         /* Error */
         .error-msg {
             margin-top: 24px;
@@ -629,6 +608,66 @@
             .save-panel-row { flex-direction: column; align-items: stretch; }
         }
 
+        /* ── Price loader ── */
+        .price-loader {
+            display: none;
+            padding: 16px 0 4px;
+        }
+
+        .price-loader.active { display: block; animation: rise 0.2s ease; }
+
+        .price-loader-bar {
+            height: 3px;
+            background: var(--border-light);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .price-loader-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--yellow-dark), var(--yellow), var(--yellow-dark), transparent);
+            width: 50%;
+            animation: price-bar-slide 1.6s ease-in-out infinite;
+        }
+
+        @keyframes price-bar-slide {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+        }
+
+        .price-loader-status {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .price-loader-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; color: var(--text-muted);
+            letter-spacing: 0.06em; text-transform: uppercase;
+        }
+
+        /* ── Price another CTA ── */
+        .price-another-cta {
+            display: none;
+            margin-top: 14px;
+        }
+
+        .price-another-btn {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px solid var(--text);
+            padding-bottom: 1px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        .price-another-btn:hover { color: var(--text-muted); border-color: var(--text-muted); }
+
         @media (max-width: 400px) {
             .hero-headline { font-size: 42px; }
             .fields-grid { grid-template-columns: 1fr; }
@@ -759,6 +798,13 @@
 
                 <div class="form-footer">
                     <button type="submit" class="submit-btn" id="submitBtn">Get Price Range</button>
+                    <div class="price-loader" id="priceLoader">
+                        <div class="price-loader-bar">
+                            <div class="price-loader-bar-fill"></div>
+                        </div>
+                        <p class="price-loader-status" id="priceLoaderStatus">Analyzing item…</p>
+                        <p class="price-loader-hint">This usually takes 10–20 seconds.</p>
+                    </div>
                 </div>
             </form>
         </div>
@@ -788,7 +834,7 @@
                 <div class="save-panel-header">
                     <span class="save-panel-label">Save to Session</span>
                 </div>
-                <form method="POST" action="/sessions/save-item" class="save-panel-form">
+                <form class="save-panel-form" id="saveItemForm">
                     <input type="hidden" name="brand" value="{{ selected_brand }}">
                     <input type="hidden" name="image_ref" value="{{ image_ref_for_save or '' }}">
                     <input type="hidden" name="features_json" value="{{ features_json or '{}' }}">
@@ -802,9 +848,12 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="save-item-btn">Save Item</button>
+                        <button type="submit" class="save-item-btn" id="saveItemBtn">Save Item</button>
                     </div>
                 </form>
+                <div class="price-another-cta" id="priceAnotherCta">
+                    <a href="/" class="price-another-btn" id="priceAnotherLink">Price another item →</a>
+                </div>
             </div>
             {% else %}
             <p class="save-empty-hint">
@@ -1078,6 +1127,7 @@
             })
             .catch(err => {
                 stopStagedStatus();
+                hidePriceLoader();
                 Object.keys(slotFiles).forEach(s => setSlotProcessing(s, false));
                 setStatus('Analysis failed: ' + err.message, true);
                 document.getElementById('submitBtn').disabled = false;
@@ -1145,13 +1195,41 @@
         unlockForm();
     }
 
+    // ── Price loader ──────────────────────────────────────────────────────────
+    const _PRICE_STAGES = [
+        'Analyzing item…', 'Reading features…',
+        'Estimating price…', 'Building price range…'
+    ];
+    let _priceStageIdx = 0;
+    let _priceStageInterval = null;
+
+    function showPriceLoader() {
+        const loader = document.getElementById('priceLoader');
+        if (!loader) return;
+        _priceStageIdx = 0;
+        const statusEl = document.getElementById('priceLoaderStatus');
+        if (statusEl) statusEl.textContent = _PRICE_STAGES[0];
+        loader.classList.add('active');
+        _priceStageInterval = setInterval(() => {
+            _priceStageIdx = (_priceStageIdx + 1) % _PRICE_STAGES.length;
+            const el = document.getElementById('priceLoaderStatus');
+            if (el) el.textContent = _PRICE_STAGES[_priceStageIdx];
+        }, 3200);
+    }
+
+    function hidePriceLoader() {
+        clearInterval(_priceStageInterval);
+        document.getElementById('priceLoader')?.classList.remove('active');
+    }
+
     document.getElementById('priceForm').addEventListener('submit', function(e) {
-        if (!slotFiles.front || _isAnalyzing) return;
+        if (_isAnalyzing) { e.preventDefault(); return; }
+        showPriceLoader();
+        document.getElementById('submitBtn').disabled = true;
+        if (!slotFiles.front) return; // manual mode: let form submit naturally
         e.preventDefault();
         runFullAnalyze(function() {
-            setTimeout(() => {
-                document.getElementById('priceForm').submit();
-            }, 200);
+            setTimeout(() => document.getElementById('priceForm').submit(), 200);
         });
     });
 
@@ -1169,16 +1247,52 @@
     });
     {% endif %}
 
-    // Show saved toast
+    // ── Unsaved result warning ────────────────────────────────────────────────
+    let _resultSaved = false;
+    {% if result %}
+    window.addEventListener('beforeunload', function(e) {
+        if (!_resultSaved) { e.preventDefault(); e.returnValue = ''; }
+    });
+    {% endif %}
+
+    // ── AJAX Save Item ────────────────────────────────────────────────────────
+    document.getElementById('saveItemForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const btn = document.getElementById('saveItemBtn');
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        fetch('/sessions/save-item', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            _resultSaved = true;
+            btn.textContent = 'Saved ✓';
+            showToast('Saved to session');
+            const cta = document.getElementById('priceAnotherCta');
+            if (cta) cta.style.display = 'block';
+            document.getElementById('priceAnotherLink')?.addEventListener('click', () => {
+                _resultSaved = true;
+            }, { once: true });
+        })
+        .catch(err => {
+            showToast('Failed to save — ' + err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Save Item';
+        });
+    });
+
+    // Fallback: ?saved=1 from non-AJAX redirect
     (function() {
         const params = new URLSearchParams(window.location.search);
         if (params.has('saved')) {
-            const toast = document.createElement('div');
-            toast.className = 'saved-toast';
-            toast.textContent = 'Item saved to session';
-            document.body.appendChild(toast);
-            setTimeout(() => toast.classList.add('fade-out'), 1800);
-            setTimeout(() => toast.remove(), 2300);
+            _resultSaved = true;
+            showToast('Saved to session');
             history.replaceState({}, '', '/');
         }
     })();

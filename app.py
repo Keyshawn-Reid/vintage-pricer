@@ -22,7 +22,7 @@ from src.feedback import compute_image_ref, save_feedback
 from src.sessions_db import (
     init_db, create_session, get_sessions, get_session,
     get_session_items, add_item, update_item, update_session_status,
-    get_items_by_ids, count_sessions_today,
+    get_items_by_ids, count_sessions_today, rename_session,
 )
 
 app = Flask(__name__)
@@ -521,6 +521,9 @@ def save_item():
         final_price=float(rogue_retail) if rogue_retail else None,
     )
     flask_session["active_session_id"] = session_id
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True, "item_id": item_id})
     return redirect("/?saved=1")
 
 
@@ -544,6 +547,19 @@ def update_session_status_route(session_id):
         if status in ("active", "submitted", "printed"):
             update_session_status(session_id, status)
         return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/sessions/<session_id>/rename", methods=["POST"])
+def rename_session_route(session_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        name = data.get("name", "").strip()
+        if not name:
+            return jsonify({"error": "Session name cannot be empty"}), 400
+        rename_session(session_id, name)
+        return jsonify({"success": True, "name": name})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

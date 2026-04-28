@@ -26,6 +26,10 @@
             color: var(--text-muted);
             text-decoration: none;
             transition: color 0.15s;
+            padding: 6px 0;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
         }
 
         .breadcrumb-link:hover { color: var(--text); }
@@ -69,6 +73,38 @@
             color: var(--text);
             flex: 1;
         }
+
+        .rename-headline-input {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            flex: 1;
+            border: none;
+            border-bottom: 2px solid var(--yellow-dark);
+            background: transparent;
+            outline: none;
+            padding: 0 0 2px;
+            min-width: 0;
+        }
+
+        .session-rename-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--text-muted);
+            padding: 6px;
+            flex-shrink: 0;
+            margin-top: 4px;
+            transition: color 0.15s;
+            min-width: 32px; min-height: 32px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .session-rename-btn:hover { color: var(--text); }
 
         .session-status-badge {
             font-family: 'Space Mono', monospace;
@@ -438,11 +474,24 @@
         .session-status-btn:hover { border-color: var(--text); color: var(--text); }
         .session-status-btn.active-status { background: var(--text); color: var(--yellow); border-color: var(--text); cursor: default; }
 
+        /* ── Print hint ── */
+        .print-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 640px) {
             .page-wrap { padding: 72px 1.25rem 5rem; }
             .item-card { grid-template-columns: 28px 64px 1fr; gap: 10px; padding: 14px 12px; }
             .item-thumb, .item-thumb-placeholder { width: 64px; height: 64px; }
             .actions-bar { gap: 8px; }
+            .action-btn { min-height: 40px; padding: 10px 14px; }
+            .item-status-btn { min-height: 36px; padding: 6px 12px; }
+            .session-rename-btn { min-width: 40px; min-height: 40px; }
         }
 
         @media (max-width: 480px) {
@@ -462,7 +511,8 @@
 
     <div class="session-header">
         <div class="session-title-row">
-            <h1 class="session-headline">{{ session.name }}</h1>
+            <h1 class="session-headline" id="sessionHeadline">{{ session.name }}</h1>
+            <button class="session-rename-btn" id="sessionRenameBtn" onclick="startRename()" title="Rename session" type="button">✎</button>
             <span class="session-status-badge {{ session.status }}" id="sessionStatusBadge">
                 {{ session.status }}
             </span>
@@ -488,8 +538,9 @@
             >
             <label class="select-all-label" for="selectAll">Select All</label>
         </div>
-        <span class="selected-count" id="selectedCount" style="display:none"></span>
+        <span class="selected-count" id="selectedCount"></span>
         <span class="actions-spacer"></span>
+        <span class="print-hint" id="printHint">{% if items %}Select items to print{% endif %}</span>
         <button
             class="action-btn"
             id="exportBtn"
@@ -670,23 +721,21 @@
 
     function updateSelectionUI() {
         const n = selectedIds.size;
+        const total = document.querySelectorAll('.item-check').length;
         const countEl = document.getElementById('selectedCount');
         const printBtn = document.getElementById('printBtn');
         const exportBtn = document.getElementById('exportBtn');
+        const printHint = document.getElementById('printHint');
 
-        if (n > 0) {
-            countEl.textContent = n + ' selected';
-            countEl.style.display = '';
-        } else {
-            countEl.style.display = 'none';
+        if (total > 0) {
+            countEl.textContent = n + ' of ' + total + ' selected';
         }
 
-        const hasItems = document.querySelectorAll('.item-card').length > 0;
         printBtn.disabled = n === 0;
         exportBtn.disabled = n === 0;
 
-        // Sync select-all indeterminate state
-        const total = document.querySelectorAll('.item-check').length;
+        if (printHint) printHint.style.visibility = n === 0 ? 'visible' : 'hidden';
+
         const allCheck = document.getElementById('selectAll');
         if (allCheck) {
             allCheck.indeterminate = n > 0 && n < total;
@@ -709,11 +758,11 @@
             })
             .then(r => r.json())
             .then(data => {
-                if (data.success) {
-                    input.classList.add('saved');
-                    setTimeout(() => input.classList.remove('saved'), 1200);
-                }
-            });
+                if (data.error) throw new Error(data.error);
+                input.classList.add('saved');
+                setTimeout(() => input.classList.remove('saved'), 1200);
+            })
+            .catch(err => showToast('Price not saved — ' + err.message, 'error'));
         }, 600);
     }
 
@@ -730,15 +779,17 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                btn.dataset.status = next;
-                btn.textContent = next;
-            }
-        });
+            if (data.error) throw new Error(data.error);
+            btn.dataset.status = next;
+            btn.textContent = next;
+            showToast('Status → ' + next);
+        })
+        .catch(err => showToast('Status update failed — ' + err.message, 'error'));
     }
 
     // ── Session status ────────────────────────────────────────────────────────
     function setSessionStatus(status) {
+        const clickedBtn = event.target;
         fetch(`/sessions/${SESSION_ID}/status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -746,16 +797,75 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                const badge = document.getElementById('sessionStatusBadge');
-                badge.className = 'session-status-badge ' + status;
-                badge.textContent = status;
-                document.querySelectorAll('.session-status-btn').forEach(btn => {
-                    btn.classList.remove('active-status');
-                });
-                event.target.classList.add('active-status');
-            }
+            if (data.error) throw new Error(data.error);
+            const badge = document.getElementById('sessionStatusBadge');
+            badge.className = 'session-status-badge ' + status;
+            badge.textContent = status;
+            document.querySelectorAll('.session-status-btn').forEach(btn => btn.classList.remove('active-status'));
+            clickedBtn.classList.add('active-status');
+            showToast('Session marked ' + status);
+        })
+        .catch(err => showToast('Update failed — ' + err.message, 'error'));
+    }
+
+    // ── Inline session rename ─────────────────────────────────────────────────
+    function startRename() {
+        const headline = document.getElementById('sessionHeadline');
+        const renameBtn = document.getElementById('sessionRenameBtn');
+        if (!headline) return;
+        const current = headline.textContent.trim();
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'rename-headline-input';
+        input.value = current;
+        input.maxLength = 64;
+
+        headline.replaceWith(input);
+        renameBtn.style.display = 'none';
+        input.focus();
+        input.select();
+
+        input.addEventListener('blur', () => commitRename(input, current));
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter')  { e.preventDefault(); commitRename(input, current); }
+            if (e.key === 'Escape') { cancelRename(input, current); }
         });
+    }
+
+    function commitRename(input, fallback) {
+        const name = input.value.trim();
+        if (!name) { cancelRename(input, fallback); return; }
+
+        fetch(`/sessions/${SESSION_ID}/rename`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            restoreHeadline(input, name);
+            document.title = name + ' — RPM';
+            showToast('Session renamed');
+        })
+        .catch(err => {
+            cancelRename(input, fallback);
+            showToast('Rename failed — ' + err.message, 'error');
+        });
+    }
+
+    function cancelRename(input, fallback) {
+        restoreHeadline(input, fallback);
+    }
+
+    function restoreHeadline(input, name) {
+        const h1 = document.createElement('h1');
+        h1.className = 'session-headline';
+        h1.id = 'sessionHeadline';
+        h1.textContent = name;
+        input.replaceWith(h1);
+        document.getElementById('sessionRenameBtn').style.display = '';
     }
 
     // ── Export JSON ───────────────────────────────────────────────────────────
