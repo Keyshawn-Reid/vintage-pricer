@@ -442,44 +442,6 @@
 
     <div class="no-results" id="noResults">No sessions match your search.</div>
 
-    <!-- New Session Modal -->
-    <div class="modal-backdrop" id="newSessionModal">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title">New Session</span>
-                <button class="modal-close" onclick="closeNewSessionModal()" type="button">✕</button>
-            </div>
-            <div class="modal-body">
-                <label class="modal-field-label" for="newSessionInput">Session Name</label>
-                <input type="text" class="modal-input" id="newSessionInput"
-                       placeholder="e.g. Friday New Arrivals" maxlength="64" autocomplete="off">
-                <p class="modal-hint">Leave blank to auto-name by date.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="modal-cancel" onclick="closeNewSessionModal()">Cancel</button>
-                <button type="button" class="modal-confirm" onclick="submitNewSession()">Create Session</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rename Session Modal -->
-    <div class="modal-backdrop" id="renameSessionModal">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title">Rename Session</span>
-                <button class="modal-close" onclick="closeRenameModal()" type="button">✕</button>
-            </div>
-            <div class="modal-body">
-                <label class="modal-field-label" for="renameInput">Session Name</label>
-                <input type="text" class="modal-input" id="renameInput" maxlength="64" autocomplete="off">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="modal-cancel" onclick="closeRenameModal()">Cancel</button>
-                <button type="button" class="modal-confirm" onclick="submitRename()">Rename</button>
-            </div>
-        </div>
-    </div>
-
     {% else %}
     <div class="empty-state">
         <div class="empty-icon">○</div>
@@ -489,6 +451,45 @@
     {% endif %}
 
 </div>
+
+<!-- New Session Modal — outside {% if sessions %} so it renders on empty state too -->
+<div class="modal-backdrop" id="newSessionModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">New Session</span>
+            <button class="modal-close" onclick="closeNewSessionModal()" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+            <label class="modal-field-label" for="newSessionInput">Session Name</label>
+            <input type="text" class="modal-input" id="newSessionInput"
+                   placeholder="e.g. Friday New Arrivals" maxlength="64" autocomplete="off">
+            <p class="modal-hint">Leave blank to auto-name by date.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-cancel" onclick="closeNewSessionModal()">Cancel</button>
+            <button type="button" class="modal-confirm" onclick="submitNewSession()">Create Session</button>
+        </div>
+    </div>
+</div>
+
+<!-- Rename Session Modal -->
+<div class="modal-backdrop" id="renameSessionModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Rename Session</span>
+            <button class="modal-close" onclick="closeRenameModal()" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+            <label class="modal-field-label" for="renameInput">Session Name</label>
+            <input type="text" class="modal-input" id="renameInput" maxlength="64" autocomplete="off">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-cancel" onclick="closeRenameModal()">Cancel</button>
+            <button type="button" class="modal-confirm" onclick="submitRename()">Rename</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
