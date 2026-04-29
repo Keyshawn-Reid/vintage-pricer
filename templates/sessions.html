@@ -549,6 +549,17 @@
         if (e.target === this) closeNewSessionModal();
     });
 
+    function safeJson(r) {
+        const ct = r.headers.get('Content-Type') || '';
+        if (!ct.includes('application/json')) {
+            return r.text().then(() => { throw new Error(r.status + ' — server error'); });
+        }
+        return r.json().then(data => {
+            if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+            return data;
+        });
+    }
+
     // ── Rename Session Modal ──────────────────────────────────────────────────
     let _renameTargetId = null;
     let _renameTargetWrapper = null;
@@ -579,9 +590,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name }),
         })
-        .then(r => r.json())
+        .then(safeJson)
         .then(data => {
-            if (data.error) throw new Error(data.error);
             closeRenameModal();
             if (_renameTargetWrapper) {
                 _renameTargetWrapper.querySelector('.session-name').textContent = name;

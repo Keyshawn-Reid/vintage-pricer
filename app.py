@@ -505,22 +505,30 @@ def save_item():
 
     sess = get_session(session_id)
     if not sess:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"error": "Session not found"}), 404
         return redirect("/?save_error=1")
 
-    title = make_item_title(brand, features)
-    rogue_retail = retail_price((low + high) / 2) if low or high else None
-    add_item(
-        session_id=session_id,
-        brand=brand,
-        title=title,
-        category="T-Shirt",
-        features=features,
-        image_ref=image_ref,
-        suggested_low=low,
-        suggested_high=high,
-        final_price=float(rogue_retail) if rogue_retail else None,
-    )
-    flask_session["active_session_id"] = session_id
+    try:
+        title = make_item_title(brand, features)
+        rogue_retail = retail_price((low + high) / 2) if low or high else None
+        item_id = add_item(
+            session_id=session_id,
+            brand=brand,
+            title=title,
+            category="T-Shirt",
+            features=features,
+            image_ref=image_ref,
+            suggested_low=low,
+            suggested_high=high,
+            final_price=float(rogue_retail) if rogue_retail else None,
+        )
+        flask_session["active_session_id"] = session_id
+    except Exception as e:
+        print(f"[RPM /save-item] error: {e}", flush=True)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"error": str(e)}), 500
+        return redirect("/?save_error=1")
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"success": True, "item_id": item_id})

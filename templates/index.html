@@ -874,6 +874,19 @@
 
 {% block scripts %}
 <script>
+    function safeJson(r) {
+        const ct = r.headers.get('Content-Type') || '';
+        if (!ct.includes('application/json')) {
+            return r.text().then(t => {
+                throw new Error(r.status + ' — server returned non-JSON response');
+            });
+        }
+        return r.json().then(data => {
+            if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+            return data;
+        });
+    }
+
     const BRANDS_CONFIG = {{ brands_json | safe }};
     const BRAND_META = {
         {% for brand_id, brand_cfg in brands.items() %}
@@ -1086,9 +1099,8 @@
         fd.append('front', slotFiles.front);
 
         fetch('/detect', { method: 'POST', body: fd })
-            .then(r => r.json())
+            .then(safeJson)
             .then(data => {
-                if (data.error) throw new Error(data.error);
                 activateBrand(data.detected_brand);
                 document.getElementById('badge-brand').classList.add('visible');
                 document.getElementById('brandSelect').classList.add('ai-filled');
@@ -1117,10 +1129,9 @@
         fd.append('brand', currentBrand);
 
         fetch('/analyze', { method: 'POST', body: fd })
-            .then(r => r.json())
+            .then(safeJson)
             .then(data => {
                 stopStagedStatus();
-                if (data.error) throw new Error(data.error);
                 fillForm(data);
                 Object.keys(slotFiles).forEach(s => { if (slotFiles[s]) setSlotDone(s); });
                 onSuccess && onSuccess();
@@ -1268,9 +1279,8 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: new FormData(form),
         })
-        .then(r => r.json())
+        .then(safeJson)
         .then(data => {
-            if (data.error) throw new Error(data.error);
             _resultSaved = true;
             btn.textContent = 'Saved ✓';
             showToast('Saved to session');

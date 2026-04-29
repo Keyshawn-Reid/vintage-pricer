@@ -680,6 +680,17 @@
     const SESSION_ID = "{{ session.id }}";
     let selectedIds = new Set();
 
+    function safeJson(r) {
+        const ct = r.headers.get('Content-Type') || '';
+        if (!ct.includes('application/json')) {
+            return r.text().then(() => { throw new Error(r.status + ' — server error'); });
+        }
+        return r.json().then(data => {
+            if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+            return data;
+        });
+    }
+
     // Format dates
     document.querySelectorAll('[data-iso]').forEach(el => {
         const d = new Date(el.dataset.iso);
@@ -756,9 +767,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ final_price: val }),
             })
-            .then(r => r.json())
+            .then(safeJson)
             .then(data => {
-                if (data.error) throw new Error(data.error);
                 input.classList.add('saved');
                 setTimeout(() => input.classList.remove('saved'), 1200);
             })
@@ -777,9 +787,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: next }),
         })
-        .then(r => r.json())
+        .then(safeJson)
         .then(data => {
-            if (data.error) throw new Error(data.error);
             btn.dataset.status = next;
             btn.textContent = next;
             showToast('Status → ' + next);
@@ -795,9 +804,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status }),
         })
-        .then(r => r.json())
+        .then(safeJson)
         .then(data => {
-            if (data.error) throw new Error(data.error);
             const badge = document.getElementById('sessionStatusBadge');
             badge.className = 'session-status-badge ' + status;
             badge.textContent = status;
@@ -842,9 +850,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name }),
         })
-        .then(r => r.json())
+        .then(safeJson)
         .then(data => {
-            if (data.error) throw new Error(data.error);
             restoreHeadline(input, name);
             document.title = name + ' — RPM';
             showToast('Session renamed');
